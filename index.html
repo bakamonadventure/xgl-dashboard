@@ -1166,9 +1166,10 @@
         <h1 id="appTitleEl">XGL Live Team Dashboard</h1>
       </div>
       <div class="controls">
-        
-        <button onclick="window.toggleLang()" style="background: #e2e8f0; color: #475569; font-weight: 700; padding: 0.6rem 1rem;">🌐 EN/JA</button>
-        
+        <div style="display: flex; gap: 4px;">
+          <button id="lang-en-btn" onclick="window.setLang('en')" style="background: #e2e8f0; color: #475569; font-weight: 700; padding: 0.6rem 1rem; border-radius: 8px 0 0 8px; border: 1px solid #cbd5e1; opacity: 0.5; transition: opacity 0.2s;">🇺🇸 EN</button>
+          <button id="lang-ja-btn" onclick="window.setLang('ja')" style="background: #e2e8f0; color: #475569; font-weight: 700; padding: 0.6rem 1rem; border-radius: 0 8px 8px 0; border: 1px solid #cbd5e1; opacity: 1; transition: opacity 0.2s;">🇯🇵 JA</button>
+        </div>
 
         <button id="refreshBtn">Refresh</button>
       </div>
@@ -1358,15 +1359,26 @@
       return str;
     };
 
-    window.toggleLang = function () {
-      window.appLang = window.appLang === 'ja' ? 'en' : 'ja';
+    window.setLang = function (lang) {
+      window.appLang = lang;
+      
+      const enBtn = document.getElementById('lang-en-btn');
+      const jaBtn = document.getElementById('lang-ja-btn');
+      if (enBtn && jaBtn) {
+        enBtn.style.opacity = lang === 'en' ? '1' : '0.5';
+        jaBtn.style.opacity = lang === 'ja' ? '1' : '0.5';
+      }
+
       document.getElementById('appTitleEl').innerText = window.t('appTitle');
       document.getElementById('refreshBtn').innerText = window.t('refresh');
 
       const nolaSheet = sheets.find(s => s.key === 'NOLAAthlete');
       if (nolaSheet) nolaSheet.title = window.t('nolaSimulator');
 
-      if (typeof renderTabs === 'function') renderTabs();
+      const scoreSheet = sheets.find(s => s.key === 'SCOREENTRY');
+      if (scoreSheet) scoreSheet.title = window.t('scoreEntry');
+
+      if (typeof createSheetButtons === 'function') createSheetButtons();
 
       if (state.activeSheet === 'NOLAAthlete' && typeof renderNolaFocusTab === 'function') {
         renderNolaFocusTab();
@@ -1413,7 +1425,11 @@
         button.addEventListener('click', () => selectSheet(sheet.key));
         tabs.appendChild(button);
       });
-      selectSheet(sheets[0].key);
+      if (!state.activeSheet) {
+        selectSheet(sheets[0].key);
+      } else {
+        updateActiveTab();
+      }
     }
 
     function updateActiveTab() {
