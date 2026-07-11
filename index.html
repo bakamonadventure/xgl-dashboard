@@ -1297,7 +1297,13 @@
         'club': 'Club',
         'discipline': 'Discipline',
         'totalPoints': 'Total Points',
-        'showingLeaderboard': 'Showing athlete leaderboard. Load time:'
+        'showingLeaderboard': 'Showing athlete leaderboard. Load time:',
+        'aiGlobal': 'Global Analysis',
+        'aiTko': 'TKO Perspective',
+        'aiNy': 'NY Perspective',
+        'aiLa': 'LA Perspective',
+        'aiSp': 'SP Perspective',
+        'aiRunBtn': '✨ Run AI Analysis (3.1 Pro)'
       },
       'ja': {
         'appTitle': 'XGL ライブチームダッシュボード',
@@ -1394,7 +1400,13 @@
         'club': 'チーム',
         'discipline': '種目',
         'totalPoints': '合計ポイント',
-        'showingLeaderboard': '選手リーダーボードを表示しています。読み込み時間:'
+        'showingLeaderboard': '選手リーダーボードを表示しています。読み込み時間:',
+        'aiGlobal': '全体分析',
+        'aiTko': 'TKO目線',
+        'aiNy': 'NY目線',
+        'aiLa': 'LA目線',
+        'aiSp': 'SP目線',
+        'aiRunBtn': '✨ AI分析を実行 (3.1 Pro)'
       }
     };
 
@@ -2884,14 +2896,14 @@
             <div style="margin-top: 24px; background: rgba(0,0,0,0.2); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 12px; padding: 16px;">
               <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
                 <div style="display: flex; gap: 4px; background: rgba(255,255,255,0.05); padding: 4px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-                  <button onclick="document.querySelectorAll('.ai-team-tab').forEach(b=>{b.style.background='transparent'; b.style.color='#94a3b8';}); this.style.background='rgba(255,255,255,0.15)'; this.style.color='#fff'; document.getElementById('aiTargetTeamVal').value='ALL';" class="ai-team-tab" style="padding: 6px 16px; border-radius: 6px; border: none; background: rgba(255,255,255,0.15); color: #fff; font-weight: bold; cursor: pointer; transition: all 0.2s;">全体分析</button>
-                  <button onclick="document.querySelectorAll('.ai-team-tab').forEach(b=>{b.style.background='transparent'; b.style.color='#94a3b8';}); this.style.background='rgba(255,255,255,0.15)'; this.style.color='#fff'; document.getElementById('aiTargetTeamVal').value='TKO';" class="ai-team-tab" style="padding: 6px 16px; border-radius: 6px; border: none; background: transparent; color: #94a3b8; font-weight: bold; cursor: pointer; transition: all 0.2s;">TKO目線</button>
-                  <button onclick="document.querySelectorAll('.ai-team-tab').forEach(b=>{b.style.background='transparent'; b.style.color='#94a3b8';}); this.style.background='rgba(255,255,255,0.15)'; this.style.color='#fff'; document.getElementById('aiTargetTeamVal').value='NY';" class="ai-team-tab" style="padding: 6px 16px; border-radius: 6px; border: none; background: transparent; color: #94a3b8; font-weight: bold; cursor: pointer; transition: all 0.2s;">NY目線</button>
-                  <button onclick="document.querySelectorAll('.ai-team-tab').forEach(b=>{b.style.background='transparent'; b.style.color='#94a3b8';}); this.style.background='rgba(255,255,255,0.15)'; this.style.color='#fff'; document.getElementById('aiTargetTeamVal').value='LA';" class="ai-team-tab" style="padding: 6px 16px; border-radius: 6px; border: none; background: transparent; color: #94a3b8; font-weight: bold; cursor: pointer; transition: all 0.2s;">LA目線</button>
-                  <button onclick="document.querySelectorAll('.ai-team-tab').forEach(b=>{b.style.background='transparent'; b.style.color='#94a3b8';}); this.style.background='rgba(255,255,255,0.15)'; this.style.color='#fff'; document.getElementById('aiTargetTeamVal').value='SP';" class="ai-team-tab" style="padding: 6px 16px; border-radius: 6px; border: none; background: transparent; color: #94a3b8; font-weight: bold; cursor: pointer; transition: all 0.2s;">SP目線</button>
+                  <button onclick="document.querySelectorAll('.ai-team-tab').forEach(b=>{b.style.background='transparent'; b.style.color='#94a3b8';}); this.style.background='rgba(255,255,255,0.15)'; this.style.color='#fff'; document.getElementById('aiTargetTeamVal').value='ALL';" class="ai-team-tab" style="padding: 6px 16px; border-radius: 6px; border: none; background: rgba(255,255,255,0.15); color: #fff; font-weight: bold; cursor: pointer; transition: all 0.2s;">${window.t('aiGlobal')}</button>
+                  <button onclick="document.querySelectorAll('.ai-team-tab').forEach(b=>{b.style.background='transparent'; b.style.color='#94a3b8';}); this.style.background='rgba(255,255,255,0.15)'; this.style.color='#fff'; document.getElementById('aiTargetTeamVal').value='TKO';" class="ai-team-tab" style="padding: 6px 16px; border-radius: 6px; border: none; background: transparent; color: #94a3b8; font-weight: bold; cursor: pointer; transition: all 0.2s;">${window.t('aiTko')}</button>
+                  <button onclick="document.querySelectorAll('.ai-team-tab').forEach(b=>{b.style.background='transparent'; b.style.color='#94a3b8';}); this.style.background='rgba(255,255,255,0.15)'; this.style.color='#fff'; document.getElementById('aiTargetTeamVal').value='NY';" class="ai-team-tab" style="padding: 6px 16px; border-radius: 6px; border: none; background: transparent; color: #94a3b8; font-weight: bold; cursor: pointer; transition: all 0.2s;">${window.t('aiNy')}</button>
+                  <button onclick="document.querySelectorAll('.ai-team-tab').forEach(b=>{b.style.background='transparent'; b.style.color='#94a3b8';}); this.style.background='rgba(255,255,255,0.15)'; this.style.color='#fff'; document.getElementById('aiTargetTeamVal').value='LA';" class="ai-team-tab" style="padding: 6px 16px; border-radius: 6px; border: none; background: transparent; color: #94a3b8; font-weight: bold; cursor: pointer; transition: all 0.2s;">${window.t('aiLa')}</button>
+                  <button onclick="document.querySelectorAll('.ai-team-tab').forEach(b=>{b.style.background='transparent'; b.style.color='#94a3b8';}); this.style.background='rgba(255,255,255,0.15)'; this.style.color='#fff'; document.getElementById('aiTargetTeamVal').value='SP';" class="ai-team-tab" style="padding: 6px 16px; border-radius: 6px; border: none; background: transparent; color: #94a3b8; font-weight: bold; cursor: pointer; transition: all 0.2s;">${window.t('aiSp')}</button>
                   <input type="hidden" id="aiTargetTeamVal" value="ALL">
                 </div>
-                <button id="aiAnalyzeBtn" onclick="window.analyzeWithGemini(window.latestMcDataStr)" style="background: linear-gradient(135deg, #a855f7, #6366f1); color: #fff; padding: 10px 24px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: transform 0.2s, filter 0.2s; box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4);">✨ AI分析を実行 (3.1 Pro)</button>
+                <button id="aiAnalyzeBtn" onclick="window.analyzeWithGemini(window.latestMcDataStr)" style="background: linear-gradient(135deg, #a855f7, #6366f1); color: #fff; padding: 10px 24px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: transform 0.2s, filter 0.2s; box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4);">${window.t('aiRunBtn')}</button>
               </div>
               <div id="aiAnalysisResult" style="display: none; margin-top: 20px; border-top: 1px solid rgba(168, 85, 247, 0.4); padding-top: 20px; text-align: left;"></div>
             </div>
@@ -3723,10 +3735,14 @@
       
       const resPanel = document.getElementById('aiAnalysisResult');
       const btn = document.getElementById('aiAnalyzeBtn');
-      if(btn) { btn.disabled = true; btn.innerText = '✨ 分析中...'; }
+      const isJa = window.appLang === 'ja';
+
+      if(btn) { btn.disabled = true; btn.innerText = isJa ? '✨ 分析中...' : '✨ Analyzing...'; }
       if(resPanel) {
         resPanel.style.display = 'block';
-        resPanel.innerHTML = '<div style="color: #cbd5e1; padding: 16px;">AIが過去のデータとシミュレーション結果から勝ち筋を分析しています...</div>';
+        resPanel.innerHTML = isJa 
+          ? '<div style="color: #cbd5e1; padding: 16px;">AIが過去のデータとシミュレーション結果から勝ち筋を分析しています...</div>'
+          : '<div style="color: #cbd5e1; padding: 16px;">AI is analyzing winning paths based on past data and simulation results...</div>';
       }
 
       let rosterStr = '';
@@ -3738,13 +3754,17 @@
           const name = athlete.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
           teams[t].push(name);
         });
-        rosterStr = '【各チームの主な所属選手（※以下から欠場選手を除いた選手が対象です）】\n';
+        rosterStr = isJa 
+          ? '【各チームの主な所属選手（※以下から欠場選手を除いた選手が対象です）】\n'
+          : '[Main Affiliated Athletes (Excluding absent athletes listed below)]\n';
         Object.entries(teams).forEach(([team, members]) => {
           rosterStr += `- ${team}: ${members.join(', ')}\n`;
         });
       }
 
-      let currentStateStr = '【現在の各競技のシミュレーション状況（確定または予測スコア）】\n';
+      let currentStateStr = isJa 
+        ? '【現在の各競技のシミュレーション状況（確定または予測スコア）】\n'
+        : '[Current Simulation Status for Events (Confirmed or Predicted Scores)]\n';
       const optAthletes = new Set();
       if (window.simState) {
         Object.entries(window.simState).forEach(([key, sim]) => {
@@ -3761,7 +3781,9 @@
       
       let optStr = '';
       if (optAthletes.size > 0) {
-        optStr = '\n【欠場・棄権（OPT）の選手一覧】※重要：これらの選手は試合に出場しないため、絶対に勝ち筋や期待する選手として挙げないでください。\n';
+        optStr = isJa 
+          ? '\n【欠場・棄権（OPT）の選手一覧】※重要：これらの選手は試合に出場しないため、絶対に勝ち筋や期待する選手として挙げないでください。\n'
+          : '\n[Absent/OPT Athletes List] *IMPORTANT: These athletes will NOT compete. Absolutely do NOT suggest them as part of a winning path.\n';
         optStr += `- ${Array.from(optAthletes).join(', ')}\n`;
       }
 
