@@ -1,0 +1,11 @@
+node_modules/
+*.log
+fix_*.js
+update_*.js
+deploy.bat
+setup_git.bat
+fix_autopred.js
+run_server.bat
+start_server.js
+apps_script_code.js
+xcl_live_team_dashboard.html
