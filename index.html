@@ -2364,12 +2364,16 @@
           const cellStr = normalizeCell(row[c]);
           if (!cellStr) continue;
 
-          const isEventTitle = kwRegex.test(cellStr) &&
-            !cellStr.toLowerCase().includes('athlete') &&
-            !cellStr.toLowerCase().includes('free agent');
+          const isEventTitle = kwRegex.test(cellStr) && 
+            (!cellStr.toLowerCase().includes('athlete') || cellStr.includes('Men SKB')) && 
+            (!cellStr.toLowerCase().includes('free agent') || cellStr.includes('Men SKB'));
 
           if (isEventTitle) {
             let title = cellStr.replace(/\s*=\s*\d+/, '').trim();
+            // Clean up mangled header for Men's SKB ST
+            if (title.includes('Men SKB') && title.toLowerCase().includes('drafted athlete')) {
+              title = 'Men SKB ST';
+            }
             const athletes = [];
 
             let aCol = c;
@@ -2975,7 +2979,7 @@
           { day: 'Friday', title: 'bmx street' },
           { day: 'Friday', title: 'women skb park' },
           { day: 'Friday', title: 'best whip (no emoto)' },
-          { day: 'Saturday', title: 'skateboard men skb st' },
+          { day: 'Saturday', title: 'men skb st' },
           { day: 'Saturday', title: 'men skb stbt' },
           { day: 'Saturday', title: "women's bmx park" },
           { day: 'Saturday', title: 'men skb vert' },
@@ -3587,26 +3591,26 @@
 
         const mapHeaderToEvKey = (header) => {
           if (!header) return null;
-          const h = header.toLowerCase().replace(/[\s=]/g, '');
-          if (h.includes('skateboardmenskbst-') || (h.includes('menskbst') && !h.includes('stbt') && !h.includes('women'))) return 'skbMen_0';
-          if ((h.includes('menskbstbt') || h.includes('menskbbesttrick')) && !h.includes('women')) return 'skbMen_1';
-          if (h.includes('menskbpark') && !h.includes('women')) return 'skbMen_2';
-          if ((h.includes('menskbvertbt') || h.includes('menskbvertbesttrick')) && !h.includes('women')) return 'skbMen_4';
-          if (h.includes('menskbvert') && !h.includes('women')) return 'skbMen_3';
+          const h = header.toLowerCase().replace(/[\s=']/g, '');
+          if (h.includes('skateboardmenskbst-') || (h.includes('menskbst') && !h.includes('stbt') && !h.includes('women')) || (h.includes('skbstreet') && h.includes('men') && !h.includes('women'))) return 'skbMen_0';
+          if ((h.includes('menskbstbt') || h.includes('menskbbesttrick') || (h.includes('skbstreetbesttrick') && h.includes('men'))) && !h.includes('women')) return 'skbMen_1';
+          if ((h.includes('menskbpark') || (h.includes('skbpark') && h.includes('men'))) && !h.includes('women')) return 'skbMen_2';
+          if ((h.includes('menskbvertbt') || h.includes('menskbvertbesttrick') || (h.includes('skbvertbesttrick') && h.includes('men'))) && !h.includes('women')) return 'skbMen_4';
+          if ((h.includes('menskbvert') || (h.includes('skbvert') && h.includes('men'))) && !h.includes('women') && !h.includes('besttrick') && !h.includes('bt')) return 'skbMen_3';
 
-          if (h.includes('womenskbst-') || (h.includes('womenskbst') && !h.includes('stbt'))) return 'skbWomen_0';
-          if (h.includes('womenskbstbt')) return 'skbWomen_1';
-          if (h.includes('womenskbpark')) return 'skbWomen_2';
-          if (h.includes('womenskbvertbt')) return 'skbWomen_4';
-          if (h.includes('womenskbvert')) return 'skbWomen_3';
+          if (h.includes('womenskbst-') || (h.includes('womenskbst') && !h.includes('stbt')) || (h.includes('skbstreet') && h.includes('women'))) return 'skbWomen_0';
+          if (h.includes('womenskbstbt') || (h.includes('skbstreetbesttrick') && h.includes('women'))) return 'skbWomen_1';
+          if (h.includes('womenskbpark') || (h.includes('skbpark') && h.includes('women'))) return 'skbWomen_2';
+          if (h.includes('womenskbvertbt') || (h.includes('skbvertbesttrick') && h.includes('women'))) return 'skbWomen_4';
+          if ((h.includes('womenskbvert') || (h.includes('skbvert') && h.includes('women'))) && !h.includes('besttrick') && !h.includes('bt')) return 'skbWomen_3';
 
-          if (h.includes("bmxmen'sbmxpark") || (h.includes('bmxpark') && !h.includes('women') && !h.includes('besttrick') && !h.includes('bt'))) return 'bmxMen_0';
+          if (h.includes("bmxmensbmxpark") || (h.includes('bmxpark') && !h.includes('women') && !h.includes('besttrick') && !h.includes('bt'))) return 'bmxMen_0';
           if (h.includes('bmxparkbesttrick') || (h.includes('bmxparkbt') && !h.includes('women'))) return 'bmxMen_1';
           if (h.includes('bmxstreet')) return 'bmxMen_2';
           if (h.includes('bmxdirt') && !h.includes('bt') && !h.includes('besttrick')) return 'bmxMen_3';
           if (h.includes('bmxdirtbt') || h.includes('bmxdirtbesttrick')) return 'bmxMen_4';
 
-          if (h.includes("women'sbmxpark") || (h.includes('bmxpark') && h.includes('women'))) return 'bmxWomen_0';
+          if (h.includes("womensbmxpark") || (h.includes('bmxpark') && h.includes('women'))) return 'bmxWomen_0';
           return null;
         };
 
