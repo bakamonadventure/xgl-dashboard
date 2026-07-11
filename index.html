@@ -1189,8 +1189,7 @@
       </section>
     </div>
 
-    <div class="footer">To view, use a local web server or open directly in Chrome/Edge. Local CSVs are for reference;
-      actual data is fetched from web spreadsheets. If you encounter CORS errors, serve the files locally.</div>
+    <div class="footer" id="footerTextEl"></div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1274,7 +1273,31 @@
         'seSkbWomen': 'Skateboard Women',
         'seBmxMen': 'BMX Men',
         'seBmxWomen': 'BMX Women',
-        'sePlace': 'Place'
+        'sePlace': 'Place',
+        'statusLoaded': 'Loaded',
+        'statusNotLoaded': 'Not loaded',
+        'statusSimulatorReady': 'Global Simulator Ready',
+        'statusLoadingAll': 'Loading all sheets...',
+        'statusDataViewMode': 'Data view mode',
+        'noMatch': 'No athletes match the selected filters.',
+        'notLoadedClickRefresh': 'Data not loaded yet. Click the Refresh button.',
+        'sheetNoData': 'This sheet has no data.',
+        'footerText': 'To view, use a local web server or open directly in Chrome/Edge. Local CSVs are for reference; actual data is fetched from web spreadsheets. If you encounter CORS errors, serve the files locally.',
+        'totalAthletes': 'Total Athletes',
+        'filtered': 'Filtered',
+        'rows': 'Rows',
+        'visibleColumns': 'Visible columns',
+        'clickRefresh': 'Click Refresh',
+        'searchAthletes': 'Search athletes...',
+        'allClubs': 'All Clubs',
+        'allSports': 'All Sports',
+        'allGenders': 'All Genders',
+        'rank': 'Rank',
+        'athlete': 'Athlete',
+        'club': 'Club',
+        'discipline': 'Discipline',
+        'totalPoints': 'Total Points',
+        'showingLeaderboard': 'Showing athlete leaderboard. Load time:'
       },
       'ja': {
         'appTitle': 'XGL ライブチームダッシュボード',
@@ -1347,7 +1370,31 @@
         'seSkbWomen': 'スケートボード 女子',
         'seBmxMen': 'BMX 男子',
         'seBmxWomen': 'BMX 女子',
-        'sePlace': '順位'
+        'sePlace': '順位',
+        'statusLoaded': '読み込み完了',
+        'statusNotLoaded': '未読み込み',
+        'statusSimulatorReady': 'グローバルシミュレータ 準備完了',
+        'statusLoadingAll': '全シート読み込み中...',
+        'statusDataViewMode': 'データ表示モード',
+        'noMatch': '選択されたフィルターに一致する選手はいません。',
+        'notLoadedClickRefresh': 'データが読み込まれていません。更新ボタンをクリックしてください。',
+        'sheetNoData': 'このシートにはデータがありません。',
+        'footerText': 'ローカルのCSVは参照用です。実際のデータはWebのスプレッドシートから取得されます。CORSエラーが発生する場合はローカルサーバーをご利用ください。',
+        'totalAthletes': '全選手数',
+        'filtered': 'フィルター後',
+        'rows': '行数',
+        'visibleColumns': '表示列数',
+        'clickRefresh': '更新をクリック',
+        'searchAthletes': '選手を検索...',
+        'allClubs': 'すべてのチーム',
+        'allSports': 'すべての競技',
+        'allGenders': 'すべての性別',
+        'rank': '順位',
+        'athlete': '選手名',
+        'club': 'チーム',
+        'discipline': '種目',
+        'totalPoints': '合計ポイント',
+        'showingLeaderboard': '選手リーダーボードを表示しています。読み込み時間:'
       }
     };
 
@@ -1371,6 +1418,8 @@
 
       document.getElementById('appTitleEl').innerText = window.t('appTitle');
       document.getElementById('refreshBtn').innerText = window.t('refresh');
+      const footerEl = document.getElementById('footerTextEl');
+      if (footerEl) footerEl.innerText = window.t('footerText');
 
       const nolaSheet = sheets.find(s => s.key === 'NOLAAthlete');
       if (nolaSheet) nolaSheet.title = window.t('nolaSimulator');
@@ -1746,6 +1795,7 @@
     }
 
     function getOrdinalSuffix(i) {
+      if (window.appLang === 'ja') return i + "位";
       const j = i % 10, k = i % 100;
       if (j === 1 && k !== 11) return i + "st";
       if (j === 2 && k !== 12) return i + "nd";
@@ -2010,7 +2060,7 @@
       const search = document.createElement('input');
       search.type = 'text';
       search.id = 'athleteSearch';
-      search.placeholder = 'Search athletes...';
+      search.placeholder = window.t('searchAthletes');
       search.style.padding = '0.85rem 1.2rem';
       search.style.borderRadius = '14px';
       search.style.border = '1px solid rgba(148, 163, 184, 0.25)';
@@ -2028,7 +2078,7 @@
       clubSelect.ariaLabel = 'Filter by Club';
       clubSelect.style.boxShadow = '0 8px 20px rgba(15, 23, 42, 0.05)';
       clubSelect.innerHTML = `
-        <option value="">All Clubs</option>
+        <option value="">${window.t('allClubs')}</option>
         <option value="TKO">TKO</option>
         <option value="NY">NY</option>
         <option value="LA">LA</option>
@@ -2043,7 +2093,7 @@
       sportSelect.ariaLabel = 'Filter by Sport';
       sportSelect.style.boxShadow = '0 8px 20px rgba(15, 23, 42, 0.05)';
       sportSelect.innerHTML = `
-        <option value="">All Sports</option>
+        <option value="">${window.t('allSports')}</option>
         <option value="Skateboard">Skateboard</option>
         <option value="BMX">BMX</option>
       `;
@@ -2056,7 +2106,7 @@
       genderSelect.ariaLabel = 'Filter by Gender';
       genderSelect.style.boxShadow = '0 8px 20px rgba(15, 23, 42, 0.05)';
       genderSelect.innerHTML = `
-        <option value="">All Genders</option>
+        <option value="">${window.t('allGenders')}</option>
         <option value="Men">Men</option>
         <option value="Women">Women</option>
       `;
@@ -2094,11 +2144,11 @@
         return true;
       });
 
-      detailStatus.innerHTML = `Status: <span>Loaded</span> | Total Athletes: ${athletes.length} / Filtered: ${filtered.length}`;
+      detailStatus.innerHTML = `${window.t('status')} <span>${window.t('statusLoaded')}</span> | ${window.t('totalAthletes')}: ${athletes.length} / ${window.t('filtered')}: ${filtered.length}`;
       tableContainer.innerHTML = '';
 
       if (filtered.length === 0) {
-        tableContainer.innerHTML = '<p style="padding: 20px; text-align: center; color: #94a3b8;">No athletes match the selected filters.</p>';
+        tableContainer.innerHTML = `<p style="padding: 20px; text-align: center; color: #94a3b8;">${window.t('noMatch')}</p>`;
         return;
       }
 
@@ -2107,10 +2157,10 @@
       const tbody = document.createElement('tbody');
 
       const headerRow = document.createElement('tr');
-      ['Rank', 'Athlete', 'Club', 'Discipline', 'SAC', 'CHIBA', 'NOLA', 'Total Points'].forEach((text) => {
+      [window.t('rank'), window.t('athlete'), window.t('club'), window.t('discipline'), 'SAC', 'CHIBA', 'NOLA', window.t('totalPoints')].forEach((text) => {
         const th = document.createElement('th');
         th.textContent = text;
-        if (text === 'Total Points') th.style.textAlign = 'right';
+        if (text === window.t('totalPoints')) th.style.textAlign = 'right';
         headerRow.appendChild(th);
       });
       thead.appendChild(headerRow);
@@ -2169,7 +2219,11 @@
             detailDiv.style.color = '#94a3b8';
             detailDiv.style.marginTop = '2px';
             const sortedPlacements = [...locPlacements].sort((a, b) => a.place - b.place);
-            detailDiv.textContent = sortedPlacements.map(p => `${getOrdinalSuffix(p.place)} in ${p.eventName}`).join(', ');
+            detailDiv.textContent = sortedPlacements.map(p => {
+              return window.appLang === 'ja' 
+                ? `${p.eventName}: ${getOrdinalSuffix(p.place)}` 
+                : `${getOrdinalSuffix(p.place)} in ${p.eventName}`;
+            }).join(', ');
 
             td.appendChild(sumDiv);
             td.appendChild(detailDiv);
@@ -2196,7 +2250,7 @@
 
       const summary = document.createElement('div');
       summary.className = 'status';
-      summary.innerHTML = `Showing athlete leaderboard. Load time: <span>${data.duration}ms</span>`;
+      summary.innerHTML = `${window.t('showingLeaderboard')} <span>${data.duration}ms</span>`;
       tableContainer.appendChild(summary);
       tableContainer.appendChild(table);
     }
@@ -2218,8 +2272,8 @@
       }
 
       if (!data) {
-        detailStatus.innerHTML = 'Status: <span>Not loaded</span> | Click Refresh';
-        tableContainer.innerHTML = '<p>Data not loaded yet. Click the Refresh button.</p>';
+        detailStatus.innerHTML = `${window.t('status')} <span>${window.t('statusNotLoaded')}</span> | ${window.t('clickRefresh')}`;
+        tableContainer.innerHTML = `<p>${window.t('notLoadedClickRefresh')}</p>`;
         return;
       }
 
@@ -2237,11 +2291,11 @@
       const rowCount = data.rows.length;
       const visibleHeaders = data.headers.filter(header => !/(Attendances?|MAX POINTS)/i.test(header));
       const colCount = visibleHeaders.length;
-      detailStatus.innerHTML = `Status: <span>Loaded</span> | Rows: ${rowCount} / Visible columns: ${colCount}`;
+      detailStatus.innerHTML = `${window.t('status')} <span>${window.t('statusLoaded')}</span> | ${window.t('rows')}: ${rowCount} / ${window.t('visibleColumns')}: ${colCount}`;
       tableContainer.innerHTML = '';
 
       if (rowCount === 0) {
-        tableContainer.innerHTML = '<p>This sheet has no data.</p>';
+        tableContainer.innerHTML = `<p>${window.t('sheetNoData')}</p>`;
         return;
       }
 
@@ -2442,11 +2496,11 @@
       if (filtersDiv) filtersDiv.style.display = 'none';
 
       if (!data || !data.nolaAthletes) {
-        detailStatus.innerHTML = 'Status: <span>Not loaded</span> | Click Refresh';
-        tableContainer.innerHTML = '<p>Data not loaded yet. Click the Refresh button.</p>';
+        detailStatus.innerHTML = `${window.t('status')} <span>${window.t('statusNotLoaded')}</span> | ${window.t('clickRefresh')}`;
+        tableContainer.innerHTML = `<p>${window.t('notLoadedClickRefresh')}</p>`;
         return;
       }
-      detailStatus.innerHTML = `Status: <span>Global Simulator Ready</span>`;
+      detailStatus.innerHTML = `${window.t('status')} <span>${window.t('statusSimulatorReady')}</span>`;
 
       const totalData = state.sheetData['TOTAL'];
       const baseTeams = { 'TKO': 0, 'NY': 0, 'LA': 0, 'SP': 0 };
@@ -3213,8 +3267,8 @@
     }
 
     async function refreshAll() {
-      detailStatus.innerHTML = 'Status: <span>Loading all sheets...</span>';
-      tableContainer.innerHTML = '<div class="loader">Loading all sheets</div>';
+      detailStatus.innerHTML = `${window.t('status')} <span>${window.t('statusLoadingAll')}</span>`;
+      tableContainer.innerHTML = `<div class="loader">${window.t('statusLoadingAll')}</div>`;
 
       const promises = sheets.filter(s => !s.isScoreEntry).map(sheet => loadCsv(sheet).then(data => ({ key: sheet.key, data })));
       const results = await Promise.all(promises);
