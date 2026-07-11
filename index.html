@@ -2554,8 +2554,10 @@
 
           // Step 5: Assign ranks one-by-one from availableRanks (no duplicates possible)
           athletesWithScore.forEach((a, index) => {
-            const rankStr = availableRanks[index] || '-1';
+            const rankStr = availableRanks[index] || '0';
             const key = `${disc.title}-${a.name}`.replace(/[^a-zA-Z0-9]/g, '');
+
+            if (rankStr === '0') return; // Do not select OPT, leave as unselected
 
             let pts = 0;
             const ptIdx = RANK_STRS.indexOf(rankStr);
