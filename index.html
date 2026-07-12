@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oswald:wght@500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oswald:wght@500;600;700&family=Roboto+Mono:wght@500;700&display=swap"
     rel="stylesheet" />
   <style>
     :root {
@@ -21,11 +21,12 @@
       --ny-color: #3a2217;
       --la-color: #ff99dd;
       --sp-color: #294291;
-      --bg-gradient: #000000;
-      --panel-bg: #000000;
-      --panel-border: #ffffff;
+      --bg-gradient: radial-gradient(circle at top right, #1a1a2e 0%, #000000 60%);
+      --panel-bg: rgba(0, 0, 0, 0.4);
+      --panel-border: rgba(255, 255, 255, 0.1);
       --panel-hover: rgba(30, 36, 48, 0.9);
       --header-font: 'Oswald', sans-serif;
+      --number-font: 'Roboto Mono', monospace;
     }
 
     * {
@@ -199,7 +200,7 @@
     }
 
     .hero-score {
-      font-family: var(--header-font);
+      font-family: var(--number-font);
       font-size: clamp(3rem, 5vw, 4.5rem);
       font-weight: 700;
       line-height: 1;
@@ -273,7 +274,7 @@
     }
 
     .result-block strong {
-      font-family: var(--header-font);
+      font-family: var(--number-font);
       font-size: clamp(3rem, 5vw, 4rem);
       line-height: 1;
       margin-bottom: 12px;
@@ -603,7 +604,7 @@
     }
 
     .gap-score {
-      font-family: var(--header-font);
+      font-family: var(--number-font);
       font-size: clamp(4rem, 6vw, 5.5rem);
       font-weight: 700;
       line-height: 1;
@@ -637,6 +638,307 @@
       border-color: var(--tko-color);
       box-shadow: 0 0 0 2px rgba(0, 243, 255, 0.2);
       outline: none;
+    }
+
+    /* NOLA Simulator Classes */
+    .sim-leaderboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .sim-leaderboard-card {
+      padding: 20px;
+      border-radius: 16px;
+      position: relative;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .sim-leaderboard-header {
+      font-size: 1.1rem;
+      font-weight: 800;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .sim-leaderboard-badge {
+      background: rgba(255, 255, 255, 0.25);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+    }
+
+    .sim-leaderboard-score {
+      font-family: var(--number-font);
+      font-size: 2.6rem;
+      font-weight: 700;
+      line-height: 1;
+      margin: 12px 0;
+    }
+
+    .sim-leaderboard-details {
+      font-size: 0.85rem;
+      opacity: 0.9;
+    }
+
+    .sim-race-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .sim-race-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .sim-race-team {
+      width: 50px;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: #ffffff;
+      text-align: right;
+    }
+
+    .sim-race-bar-wrapper {
+      flex-grow: 1;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      height: 32px;
+      overflow: hidden;
+      display: flex;
+      position: relative;
+    }
+
+    .sim-race-bar-base {
+      height: 100%;
+      transition: width 0.4s ease-out;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 8px;
+    }
+
+    .sim-race-bar-base span {
+      font-weight: 700;
+      font-size: 0.8rem;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+
+    .sim-race-bar-sim {
+      height: 100%;
+      transition: width 0.4s ease-out;
+      position: relative;
+      border-left: 2px solid rgba(255, 255, 255, 0.5);
+    }
+
+    .sim-race-bar-sim-label {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-weight: 800;
+      font-size: 0.8rem;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    }
+
+    .sim-race-total {
+      width: 80px;
+      font-family: var(--number-font);
+      font-weight: 700;
+      font-size: 1rem;
+      color: #ffffff;
+      white-space: nowrap;
+      text-align: left;
+      padding-left: 8px;
+    }
+
+    .sim-clinch-card {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.15) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      padding: 32px;
+    }
+
+    .sim-clinch-header {
+      font-family: var(--header-font);
+      font-size: 1.6rem;
+      color: #ffffff;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .sim-clinch-desc {
+      color: #cbd5e1;
+      font-size: 0.9rem;
+      margin-bottom: 16px;
+    }
+
+    .sim-clinch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+    }
+
+    .sim-clinch-item {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 12px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .sim-clinch-vs-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-bottom: 4px;
+    }
+
+    .sim-clinch-vs-desc {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-bottom: 8px;
+    }
+
+    .sim-clinch-status-safe {
+      background: #d2ff28;
+      color: #000;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 0.85rem;
+      display: inline-block;
+    }
+
+    .sim-clinch-status-need {
+      color: #ef4444;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .sim-filter-panel {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .sim-filter-title {
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 12px;
+      font-size: 0.95rem;
+    }
+
+    .sim-filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .sim-filter-day-section {
+      margin-bottom: 8px;
+    }
+
+    .sim-filter-day-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #94a3b8;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    .sim-filter-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px 16px;
+    }
+
+    .sim-filter-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      color: #cbd5e1;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .sim-filter-checkbox {
+      cursor: pointer;
+      width: 16px;
+      height: 16px;
+      accent-color: #d2ff28;
+    }
+
+    .sim-filter-actions {
+      margin-top: 16px;
+      display: flex;
+      gap: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      padding-top: 12px;
+    }
+
+    .sim-day-header {
+      background: #ffffff;
+      color: #000;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 1.1rem;
+      margin: 32px 0 16px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sim-disc-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+      gap: 8px;
+    }
+
+    .sim-disc-title {
+      font-size: 1.05rem;
+      color: #ffffff;
+      margin: 0;
+    }
+
+    .sim-disc-badge {
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      margin-left: 6px;
+      display: inline-block;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .sim-athlete-badge {
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      min-width: 40px;
+      text-align: center;
+    }
+
+    .sim-athlete-name {
+      color: #ffffff;
+      font-size: 0.95rem;
     }
 
     /* Score Entry styles */
@@ -864,10 +1166,22 @@
       border-radius: 4px;
     }
 
-    .club-badge {\n      display: inline-block;\n      padding: 4px 10px;\n      border-radius: 2px;\n      font-family: var(--header-font);\n      font-size: 0.85rem;\n      text-transform: uppercase;\n      letter-spacing: 0.05em;\n      font-weight: 600;\n      color: #000;\n    }
+    .club-badge {
+      \n display: inline-block;
+      \n padding: 4px 10px;
+      \n border-radius: 2px;
+      \n font-family: var(--header-font);
+      \n font-size: 0.85rem;
+      \n text-transform: uppercase;
+      \n letter-spacing: 0.05em;
+      \n font-weight: 600;
+      \n color: #000;
+      \n
+    }
 
     /* ===== MOBILE RESPONSIVE ===== */
     @media (max-width: 768px) {
+
       /* Viewport scale trick: simulate PC view at 0.75x */
       :root {
         font-size: 12px;
@@ -912,7 +1226,8 @@
       }
 
       /* Buttons and controls */
-      button, select {
+      button,
+      select {
         padding: 0.5rem 0.7rem;
         font-size: 0.8rem;
       }
@@ -955,7 +1270,8 @@
       }
 
       /* Table */
-      th, td {
+      th,
+      td {
         padding: 8px 6px;
         font-size: 0.75rem;
       }
@@ -1061,6 +1377,164 @@
       .controls {
         gap: 6px;
       }
+
+      /* NOLA Simulator Responsive Overrides */
+      .sim-leaderboard-card {
+        padding: 12px 16px;
+        border-radius: 12px;
+      }
+
+      .sim-leaderboard-header {
+        font-size: 0.9rem;
+      }
+
+      .sim-leaderboard-badge {
+        padding: 2px 6px;
+        font-size: 0.7rem;
+      }
+
+      .sim-leaderboard-score {
+        font-size: 1.8rem;
+        margin: 6px 0;
+      }
+
+      .sim-leaderboard-details {
+        font-size: 0.75rem;
+      }
+
+      .sim-race-container {
+        gap: 8px;
+      }
+
+      .sim-race-row {
+        gap: 8px;
+      }
+
+      .sim-race-team {
+        width: 40px;
+        font-size: 0.9rem;
+      }
+
+      .sim-race-bar-wrapper {
+        height: 24px;
+        border-radius: 6px;
+      }
+
+      .sim-race-bar-base span {
+        font-size: 0.7rem;
+      }
+
+      .sim-race-bar-sim-label {
+        font-size: 0.7rem;
+      }
+
+      .sim-race-total {
+        width: 65px;
+        font-size: 0.85rem;
+        padding-left: 4px;
+      }
+
+      .sim-clinch-card {
+        padding: 16px;
+      }
+
+      .sim-clinch-header {
+        font-size: 1.15rem;
+        margin-bottom: 12px;
+      }
+
+      .sim-clinch-desc {
+        font-size: 0.8rem;
+        margin-bottom: 12px;
+      }
+
+      .sim-clinch-grid {
+        gap: 8px;
+      }
+
+      .sim-clinch-item {
+        padding: 10px;
+        border-radius: 8px;
+      }
+
+      .sim-clinch-vs-title {
+        font-size: 0.85rem;
+      }
+
+      .sim-clinch-vs-desc {
+        font-size: 0.75rem;
+      }
+
+      .sim-clinch-status-safe {
+        font-size: 0.8rem;
+        padding: 2px 6px;
+      }
+
+      .sim-clinch-status-need {
+        font-size: 0.8rem;
+      }
+
+      .sim-filter-panel {
+        padding: 12px;
+        border-radius: 8px;
+      }
+
+      .sim-filter-title {
+        font-size: 0.85rem;
+        margin-bottom: 8px;
+      }
+
+      .sim-filter-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px 12px;
+      }
+
+      .sim-filter-label {
+        font-size: 0.75rem;
+      }
+
+      .sim-day-header {
+        font-size: 0.95rem;
+        margin: 16px 0 10px 0;
+        padding: 6px 12px;
+      }
+
+      .sim-disc-header {
+        padding-bottom: 6px;
+        margin-bottom: 10px;
+      }
+
+      .sim-disc-title {
+        font-size: 0.9rem;
+      }
+
+      .sim-disc-badge {
+        font-size: 0.7rem;
+        padding: 2px 6px;
+        margin-left: 4px;
+      }
+
+      .sim-athlete-badge {
+        font-size: 0.7rem;
+        padding: 2px 6px;
+        min-width: 36px;
+      }
+
+      .sim-athlete-name {
+        font-size: 0.8rem;
+      }
+
+      .sim-row {
+        padding: 8px;
+        flex-wrap: nowrap;
+        gap: 10px;
+      }
+
+      .sim-select {
+        width: 95px;
+        padding: 4px 6px;
+        font-size: 0.75rem;
+      }
     }
 
     @media (max-width: 480px) {
@@ -1089,6 +1563,29 @@
       h1 {
         font-size: 1.5rem;
       }
+
+      /* Extra compact overrides for tiny screens */
+      .sim-leaderboard-score {
+        font-size: 1.6rem;
+      }
+
+      .sim-race-team {
+        width: 35px;
+        font-size: 0.85rem;
+      }
+
+      .sim-race-total {
+        width: 60px;
+        font-size: 0.8rem;
+      }
+
+      .sim-athlete-name {
+        font-size: 0.75rem;
+      }
+
+      .sim-select {
+        width: 90px;
+      }
     }
   </style>
 </head>
@@ -1096,35 +1593,32 @@
 <body>
 
   <!-- ======== PASSWORD GATE ======== -->
-  <div id="passwordGate" style="position:fixed;inset:0;z-index:99999;background:#000;display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif;">
+  <div id="passwordGate"
+    style="position:fixed;inset:0;z-index:99999;background:#000;display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif;">
     <div style="width:100%;max-width:400px;padding:20px;">
       <!-- Logo area -->
       <div style="text-align:center;margin-bottom:40px;">
-        <div style="font-family:'Oswald',sans-serif;font-size:2.5rem;font-weight:700;letter-spacing:0.1em;color:#fff;">XGL</div>
+        <div style="font-family:'Oswald',sans-serif;font-size:2.5rem;font-weight:700;letter-spacing:0.1em;color:#fff;">
+          XGL</div>
         <div style="font-size:0.85rem;color:#64748b;letter-spacing:0.2em;margin-top:4px;">LIVE TEAM DASHBOARD</div>
       </div>
       <!-- Card -->
       <div style="background:#0f172a;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:32px;">
         <div style="font-size:1.1rem;font-weight:700;color:#f1f5f9;margin-bottom:8px;">アクセスコード</div>
         <div style="font-size:0.85rem;color:#64748b;margin-bottom:24px;">このダッシュボードは関係者限定です</div>
-        <input
-          id="pwInput"
-          type="password"
-          placeholder="パスワードを入力..."
+        <input id="pwInput" type="password" placeholder="パスワードを入力..."
           onkeydown="if(event.key==='Enter') window.checkPw()"
           style="width:100%;padding:14px 16px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:10px;color:#f1f5f9;font-size:1rem;outline:none;box-sizing:border-box;margin-bottom:12px;transition:border 0.2s;"
           onfocus="this.style.border='1px solid #d2ff28'"
-          onblur="this.style.border='1px solid rgba(255,255,255,0.15)'"
-        />
+          onblur="this.style.border='1px solid rgba(255,255,255,0.15)'" />
         <div id="pwError" style="color:#ef4444;font-size:0.85rem;margin-bottom:12px;min-height:20px;"></div>
-        <button
-          onclick="window.checkPw()"
+        <button onclick="window.checkPw()"
           style="width:100%;padding:14px;background:#d2ff28;color:#000;border:none;border-radius:10px;font-weight:800;font-size:1rem;cursor:pointer;letter-spacing:0.05em;transition:filter 0.2s;"
-          onmouseover="this.style.filter='brightness(1.1)'"
-          onmouseout="this.style.filter='brightness(1)'"
-        >入場する →</button>
+          onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='brightness(1)'">入場する
+          →</button>
       </div>
-      <div style="text-align:center;margin-top:20px;color:#334155;font-size:0.75rem;">XGL © 2025 | Authorized Access Only</div>
+      <div style="text-align:center;margin-top:20px;color:#334155;font-size:0.75rem;">XGL © 2025 | Authorized Access
+        Only</div>
     </div>
   </div>
 
@@ -1133,7 +1627,7 @@
     const CORRECT_PASSWORD = 'xgl2025'; // ← ここを変更してください
     // ==========================
 
-    window.checkPw = function() {
+    window.checkPw = function () {
       const input = document.getElementById('pwInput').value;
       const errEl = document.getElementById('pwError');
       if (input === CORRECT_PASSWORD) {
@@ -1167,8 +1661,12 @@
       </div>
       <div class="controls">
         <div style="display: flex; gap: 4px;">
-          <button id="lang-en-btn" onclick="window.setLang('en')" style="background: #e2e8f0; color: #475569; font-weight: 700; padding: 0.6rem 1rem; border-radius: 8px 0 0 8px; border: 1px solid #cbd5e1; opacity: 0.5; transition: opacity 0.2s;">🇺🇸 EN</button>
-          <button id="lang-ja-btn" onclick="window.setLang('ja')" style="background: #e2e8f0; color: #475569; font-weight: 700; padding: 0.6rem 1rem; border-radius: 0 8px 8px 0; border: 1px solid #cbd5e1; opacity: 1; transition: opacity 0.2s;">🇯🇵 JA</button>
+          <button id="lang-en-btn" onclick="window.setLang('en')"
+            style="background: #e2e8f0; color: #475569; font-weight: 700; padding: 0.6rem 1rem; border-radius: 8px 0 0 8px; border: 1px solid #cbd5e1; opacity: 0.5; transition: opacity 0.2s;">🇺🇸
+            EN</button>
+          <button id="lang-ja-btn" onclick="window.setLang('ja')"
+            style="background: #e2e8f0; color: #475569; font-weight: 700; padding: 0.6rem 1rem; border-radius: 0 8px 8px 0; border: 1px solid #cbd5e1; opacity: 1; transition: opacity 0.2s;">🇯🇵
+            JA</button>
         </div>
 
         <button id="refreshBtn">Refresh</button>
@@ -1420,7 +1918,7 @@
 
     window.setLang = function (lang) {
       window.appLang = lang;
-      
+
       const enBtn = document.getElementById('lang-en-btn');
       const jaBtn = document.getElementById('lang-ja-btn');
       if (enBtn && jaBtn) {
@@ -2232,8 +2730,8 @@
             detailDiv.style.marginTop = '2px';
             const sortedPlacements = [...locPlacements].sort((a, b) => a.place - b.place);
             detailDiv.textContent = sortedPlacements.map(p => {
-              return window.appLang === 'ja' 
-                ? `${p.eventName}: ${getOrdinalSuffix(p.place)}` 
+              return window.appLang === 'ja'
+                ? `${p.eventName}: ${getOrdinalSuffix(p.place)}`
                 : `${getOrdinalSuffix(p.place)} in ${p.eventName}`;
             }).join(', ');
 
@@ -2446,8 +2944,8 @@
           const cellStr = normalizeCell(row[c]);
           if (!cellStr) continue;
 
-          const isEventTitle = kwRegex.test(cellStr) && 
-            (!cellStr.toLowerCase().includes('athlete') || cellStr.includes('Men SKB')) && 
+          const isEventTitle = kwRegex.test(cellStr) &&
+            (!cellStr.toLowerCase().includes('athlete') || cellStr.includes('Men SKB')) &&
             (!cellStr.toLowerCase().includes('free agent') || cellStr.includes('Men SKB'));
 
           if (isEventTitle) {
@@ -2572,7 +3070,7 @@
 
         nolaData.nolaAthletes.forEach(disc => {
           const POINT_VALUES = [100, 80, 60, 40, 30, 20];
-          const RANK_STRS    = ['100','80','60','40','30','20','7th','8th','9th','10th','11th','12th'];
+          const RANK_STRS = ['100', '80', '60', '40', '30', '20', '7th', '8th', '9th', '10th', '11th', '12th'];
 
           // Step 1: Collect keys of athletes that are manually locked (by user, not auto-predicted)
           // We define "manually locked" as: simState exists AND has a non-empty rank AND was NOT auto-predicted
@@ -2882,13 +3380,13 @@
           });
           contextStr += '\n【各チームの重要シナリオと勝率変動】\n';
           ['TKO', 'NY', 'LA', 'SP'].forEach(t => {
-             const scens = scenariosByTeam[t];
-             if(scens && scens.length > 0) {
-               contextStr += '[' + t + 'チーム]\n';
-               scens.forEach(s => {
-                 contextStr += '- ' + s.text + ' -> 勝率 ' + s.rate.toFixed(1) + '%\n';
-               });
-             }
+            const scens = scenariosByTeam[t];
+            if (scens && scens.length > 0) {
+              contextStr += '[' + t + 'チーム]\n';
+              scens.forEach(s => {
+                contextStr += '- ' + s.text + ' -> 勝率 ' + s.rate.toFixed(1) + '%\n';
+              });
+            }
           });
           window.latestMcDataStr = contextStr;
 
@@ -2935,10 +3433,10 @@
         const finalEventMax = { 'NY': 180, 'LA': 100, 'SP': 100 };
 
         let magicNumberHtml = `
-          <div class="focus-card" style="background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.15) 100%); border: 1px solid rgba(255,255,255,0.2);">
-            <div class="focus-header" style="color: #ffffff;">${window.t('clinchTrackerTitle')}</div>
-            <p style="color: #cbd5e1; font-size: 0.9rem; margin-bottom: 16px;">${window.t('clinchTrackerDesc')}</p>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+          <div class="sim-clinch-card">
+            <div class="sim-clinch-header">${window.t('clinchTrackerTitle')}</div>
+            <p class="sim-clinch-desc">${window.t('clinchTrackerDesc')}</p>
+            <div class="sim-clinch-grid">
         `;
 
         ['NY', 'LA', 'SP'].forEach(rival => {
@@ -2950,16 +3448,16 @@
 
           let statusHtml = '';
           if (pointsNeeded <= 0) {
-            statusHtml = `<span style="background: #d2ff28; color: #000; padding: 4px 10px; border-radius: 12px; font-weight: 800; font-size: 0.85rem;">${window.t('safe')}</span>`;
+            statusHtml = `<span class="sim-clinch-status-safe">${window.t('safe')}</span>`;
           } else {
-            statusHtml = `<span style="color: #b91c1c; font-weight: 700; font-size: 0.95rem;">${window.t('needsMore', { pt: pointsNeeded })}</span>`;
+            statusHtml = `<span class="sim-clinch-status-need">${window.t('needsMore', { pt: pointsNeeded })}</span>`;
           }
 
           const palette = getTeamPalette(rival);
           magicNumberHtml += `
-              <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 4px solid ${palette.primary};">
-                <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px;">vs ${rival}</div>
-                <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">${window.t('finalEventMax', { pt: maxRivalGain, tgt: targetLead })}</div>
+              <div class="sim-clinch-item" style="border-left: 4px solid ${palette.primary};">
+                <div class="sim-clinch-vs-title">vs ${rival}</div>
+                <div class="sim-clinch-vs-desc">${window.t('finalEventMax', { pt: maxRivalGain, tgt: targetLead })}</div>
                 <div>${statusHtml}</div>
               </div>
           `;
@@ -2970,19 +3468,19 @@
           <div class="focus-tab-container">
             <div class="focus-card">
               <div class="focus-header">${window.t('liveLeaderboard')}</div>
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 16px;">
+              <div class="sim-leaderboard-grid">
         `;
 
         leaderboard.forEach((team, index) => {
           const palette = getTeamPalette(team.name);
           const contrast = (palette.text || getContrastColor(palette.primary));
           html += `
-                <div style="background: ${palette.primary}; color: ${contrast}; padding: 20px; border-radius: 16px; position: relative;">
-                  <div style="font-size: 1.1rem; font-weight: 800; display: flex; justify-content: space-between; align-items: center;">
-                    ${team.name} <span style="background: rgba(255,255,255,0.25); padding: 4px 10px; border-radius: 12px; font-size: 0.8rem;">${getOrdinalSuffix(index + 1)}</span>
+                <div class="sim-leaderboard-card" style="background: ${palette.primary}; color: ${contrast};">
+                  <div class="sim-leaderboard-header">
+                    ${team.name} <span class="sim-leaderboard-badge">${getOrdinalSuffix(index + 1)}</span>
                   </div>
-                  <div style="font-size: 2.6rem; font-weight: 900; line-height: 1; margin: 12px 0;">${team.total.toLocaleString()}</div>
-                  <div style="font-size: 0.85rem; opacity: 0.9;">${window.t('base')} ${team.base.toLocaleString()} <br>${window.t('simulated')} +${team.sim.toLocaleString()}</div>
+                  <div class="sim-leaderboard-score">${team.total.toLocaleString()}</div>
+                  <div class="sim-leaderboard-details">${window.t('base')} ${team.base.toLocaleString()} <br>${window.t('simulated')} +${team.sim.toLocaleString()}</div>
                 </div>
           `;
         });
@@ -2997,7 +3495,7 @@
         // "Race to the Championship" visualizer
         html += `<div class="focus-card" style="margin-top: 24px;">`;
         html += `<div class="focus-header" style="margin-bottom: 20px;">${window.t('raceTitle')}</div>`;
-        html += `<div style="display: flex; flex-direction: column; gap: 16px;">`;
+        html += `<div class="sim-race-container">`;
 
         leaderboard.forEach((team) => {
           const palette = getTeamPalette(team.name);
@@ -3005,22 +3503,20 @@
           const simPct = (team.sim / maxScore) * 100;
 
           html += `
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <div style="width: 50px; font-weight: 800; font-size: 1.1rem; color: #ffffff; text-align: right;">${team.name}</div>
-              <div style="flex-grow: 1; background: rgba(255,255,255,0.15); border-radius: 12px; height: 32px; overflow: hidden; display: flex; position: relative;">
+            <div class="sim-race-row">
+              <div class="sim-race-team">${team.name}</div>
+              <div class="sim-race-bar-wrapper">
                 <!-- Base Points Bar -->
-                <div style="background: ${palette.primary}; width: ${basePct}%; height: 100%; transition: width 0.4s ease-out; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px;">
-                  <span style="color: ${palette.text || getContrastColor(palette.primary)}; font-weight: 700; font-size: 0.8rem; text-shadow: 0 1px 2px rgba(0,0,0,0.3); opacity: ${basePct > 5 ? 1 : 0}">${team.base.toLocaleString()}</span>
+                <div class="sim-race-bar-base" style="background: ${palette.primary}; width: ${basePct}%; z-index: 2;">
+                  <span style="color: ${palette.text || getContrastColor(palette.primary)}; opacity: ${basePct > 5 ? 1 : 0}">${team.base.toLocaleString()}</span>
                 </div>
                 <!-- Simulated Points Bar (Striped) -->
-                <div style="background: repeating-linear-gradient(45deg, ${palette.primary}cc, ${palette.primary}cc 10px, ${palette.primary}99 10px, ${palette.primary}99 20px); width: ${simPct}%; height: 100%; transition: width 0.4s ease-out; position: relative; border-left: 2px solid rgba(255,255,255,0.5);">
-                  ${team.sim > 0 ? `<div style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); color: ${palette.text || getContrastColor(palette.primary)}; font-weight: 800; font-size: 0.8rem; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">+${team.sim.toLocaleString()}</div>` : ''}
-                </div>
-                <!-- Absolute Total Label -->
-                <div style="position: absolute; left: calc(${basePct + simPct}% + 10px); top: 50%; transform: translateY(-50%); font-weight: 900; font-size: 1rem; color: #ffffff; transition: left 0.4s ease-out; white-space: nowrap;">
-                  ${team.total.toLocaleString()} pt
+                <div class="sim-race-bar-sim" style="background: repeating-linear-gradient(45deg, ${palette.primary}cc, ${palette.primary}cc 10px, ${palette.primary}99 10px, ${palette.primary}99 20px); width: ${simPct}%; z-index: 1;">
+                  ${team.sim > 0 ? `<div class="sim-race-bar-sim-label" style="color: ${palette.text || getContrastColor(palette.primary)};">+${team.sim.toLocaleString()}</div>` : ''}
                 </div>
               </div>
+              <!-- Absolute Total Label (Flexible, no overflow) -->
+              <div class="sim-race-total">${team.total.toLocaleString()} pt</div>
             </div>
           `;
         });
@@ -3100,9 +3596,9 @@
 
         // ADD FILTER UI
         let filterHtml = `
-          <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 16px; margin-bottom: 24px; border: 1px solid rgba(255,255,255,0.15);">
-            <div style="font-weight: 700; color: #ffffff; margin-bottom: 12px; font-size: 0.95rem;">${window.t('filterTitle')}</div>
-            <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div class="sim-filter-panel">
+            <div class="sim-filter-title">${window.t('filterTitle')}</div>
+            <div class="sim-filter-group">
         `;
 
         ['Friday', 'Saturday', 'Sunday', 'Other'].forEach(day => {
@@ -3113,15 +3609,15 @@
             : day;
 
           filterHtml += `
-            <div>
-              <div style="font-size: 0.8rem; font-weight: 700; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase;">${dayTranslation}</div>
-              <div style="display: flex; flex-wrap: wrap; gap: 16px;">
+            <div class="sim-filter-day-section">
+              <div class="sim-filter-day-title">${dayTranslation}</div>
+              <div class="sim-filter-grid">
           `;
           dayDiscs.forEach(disc => {
             const isChecked = window.discFilterState[disc.title];
             filterHtml += `
-              <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: #cbd5e1; cursor: pointer; user-select: none;">
-                <input type="checkbox" onchange="window.toggleDisc('${disc.title.replace(/'/g, "\\'")}', this.checked)" ${isChecked ? 'checked' : ''} style="cursor: pointer; width: 16px; height: 16px; accent-color: #d2ff28;">
+              <label class="sim-filter-label">
+                <input type="checkbox" class="sim-filter-checkbox" onchange="window.toggleDisc('${disc.title.replace(/'/g, "\\'")}', this.checked)" ${isChecked ? 'checked' : ''}>
                 ${disc.title}
               </label>
             `;
@@ -3131,9 +3627,9 @@
 
         filterHtml += `
             </div>
-            <div style="margin-top: 16px; display: flex; gap: 8px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 12px;">
-              <button onclick="window.checkAllDiscs(true)" style="background: rgba(255,255,255,0.15); color: #cbd5e1; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; font-weight: 600;">${window.t('checkAll')}</button>
-              <button onclick="window.checkAllDiscs(false)" style="background: rgba(255,255,255,0.15); color: #cbd5e1; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; font-weight: 600;">${window.t('uncheckAll')}</button>
+            <div class="sim-filter-actions">
+              <button onclick="window.checkAllDiscs(true)" class="tab-button" style="padding: 6px 12px; font-size: 0.8rem; min-width: auto;">${window.t('checkAll')}</button>
+              <button onclick="window.checkAllDiscs(false)" class="tab-button" style="padding: 6px 12px; font-size: 0.8rem; min-width: auto;">${window.t('uncheckAll')}</button>
             </div>
           </div>
         `;
@@ -3148,7 +3644,7 @@
             const dayTranslation = window.appLang === 'ja'
               ? currentDay.replace('Friday', '金曜日 (Day 1)').replace('Saturday', '土曜日 (Day 2)').replace('Sunday', '日曜日 (Day 3)')
               : currentDay;
-            html += `<div style="background: #ffffff; color: #000; padding: 10px 16px; border-radius: 8px; font-weight: 800; font-size: 1.1rem; margin: 32px 0 16px 0; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px;">
+            html += `<div class="sim-day-header">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
               ${dayTranslation}
             </div>`;
@@ -3167,13 +3663,13 @@
               let maxPts = 0;
               for (let i = 0; i < teamCounts[t] && i < PLACE_POINTS.length; i++) maxPts += PLACE_POINTS[i];
               const p = getTeamPalette(t);
-              maxPotentialHtml += `<span style="background: ${p.primary}; color: ${p.text || getContrastColor(p.primary)}; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; margin-left: 6px; display: inline-block; border: 1px solid rgba(255,255,255,0.15);">${t} MAX: ${maxPts}pt</span>`;
+              maxPotentialHtml += `<span class="sim-disc-badge" style="background: ${p.primary}; color: ${p.text || getContrastColor(p.primary)};">${t} MAX: ${maxPts}pt</span>`;
             }
           });
 
           html += `<div style="margin-bottom: 24px;">
-            <div style="display: flex; flex-wrap: wrap; align-items: center; border-bottom: 2px solid rgba(255,255,255,0.15); padding-bottom: 8px; margin-bottom: 12px; gap: 8px;">
-              <h3 style="font-size: 1.05rem; color: #ffffff; margin: 0;">${disc.title}</h3>
+            <div class="sim-disc-header">
+              <h3 class="sim-disc-title">${disc.title}</h3>
               ${maxPotentialHtml}
             </div>
           `;
@@ -3194,9 +3690,9 @@
 
             html += `
               <div class="sim-row">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                  <span style="background: ${tPalette.primary}; color: ${tContrast}; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; min-width: 40px; text-align: center;">${badgeLabel}</span>
-                  <strong style="color: #ffffff; font-size: 0.95rem;">${ath.name}</strong>
+                <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                  <span class="sim-athlete-badge" style="background: ${tPalette.primary}; color: ${tContrast};">${badgeLabel}</span>
+                  <strong class="sim-athlete-name">${ath.name}</strong>
                 </div>
                 <select class="sim-select" onchange="window.updateSim('${key}', '${ath.team}', this.value)">
                   <option value="0" ${currentRank === '0' ? 'selected' : ''}>${window.t('pending')}</option>
@@ -3730,17 +4226,17 @@
       }
     }
 
-    window.analyzeWithGemini = async function(mcDataStr) {
+    window.analyzeWithGemini = async function (mcDataStr) {
       const apiKey = 'AQ.Ab8RN6JfTk-xeknEs8Uhnz2awbh8Gg7t9TjnYuoJQUdwxYnY_A';
-      
+
       const resPanel = document.getElementById('aiAnalysisResult');
       const btn = document.getElementById('aiAnalyzeBtn');
       const isJa = window.appLang === 'ja';
 
-      if(btn) { btn.disabled = true; btn.innerText = isJa ? '✨ 分析中...' : '✨ Analyzing...'; }
-      if(resPanel) {
+      if (btn) { btn.disabled = true; btn.innerText = isJa ? '✨ 分析中...' : '✨ Analyzing...'; }
+      if (resPanel) {
         resPanel.style.display = 'block';
-        resPanel.innerHTML = isJa 
+        resPanel.innerHTML = isJa
           ? '<div style="color: #cbd5e1; padding: 16px;">AIが過去のデータとシミュレーション結果から勝ち筋を分析しています...</div>'
           : '<div style="color: #cbd5e1; padding: 16px;">AI is analyzing winning paths based on past data and simulation results...</div>';
       }
@@ -3750,11 +4246,11 @@
         const teams = {};
         Object.entries(window.eventAthleteTeams).forEach(([athlete, team]) => {
           const t = team.trim().toUpperCase();
-          if(!teams[t]) teams[t] = [];
+          if (!teams[t]) teams[t] = [];
           const name = athlete.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
           teams[t].push(name);
         });
-        rosterStr = isJa 
+        rosterStr = isJa
           ? '【各チームの主な所属選手（※以下から欠場選手を除いた選手が対象です）】\n'
           : '[Main Affiliated Athletes (Excluding absent athletes listed below)]\n';
         Object.entries(teams).forEach(([team, members]) => {
@@ -3762,7 +4258,7 @@
         });
       }
 
-      let currentStateStr = isJa 
+      let currentStateStr = isJa
         ? '【現在の各競技のシミュレーション状況（確定または予測スコア）】\n'
         : '[Current Simulation Status for Events (Confirmed or Predicted Scores)]\n';
       const optAthletes = new Set();
@@ -3770,7 +4266,7 @@
         Object.entries(window.simState).forEach(([key, sim]) => {
           const nameStr = key.split('-').pop();
           const name = nameStr.replace(/([A-Z])/g, ' $1').trim();
-          
+
           if (sim.points === -1 || String(sim.rank) === '-1') {
             optAthletes.add(name);
           } else if (sim.points > 0) {
@@ -3778,10 +4274,10 @@
           }
         });
       }
-      
+
       let optStr = '';
       if (optAthletes.size > 0) {
-        optStr = isJa 
+        optStr = isJa
           ? '\n【欠場・棄権（OPT）の選手一覧】※重要：これらの選手は試合に出場しないため、絶対に勝ち筋や期待する選手として挙げないでください。\n'
           : '\n[Absent/OPT Athletes List] *IMPORTANT: These athletes will NOT compete. Absolutely do NOT suggest them as part of a winning path.\n';
         optStr += `- ${Array.from(optAthletes).join(', ')}\n`;
@@ -3791,9 +4287,9 @@
       const targetTeam = targetTeamEl ? targetTeamEl.value : 'ALL';
       let teamPromptStr = '';
       if (targetTeam === 'ALL') {
-         teamPromptStr = '全チームを対象に、総合的な視点で分析してください。';
+        teamPromptStr = '全チームを対象に、総合的な視点で分析してください。';
       } else {
-         teamPromptStr = `特に【${targetTeam}チームの専属アナリスト】として、${targetTeam}チームが優勝するためには具体的にどうすればよいか（誰が何位を取るべきか、どのライバルが崩れるべきか等）という視点を中心に、徹底的に分析してください。`;
+        teamPromptStr = `特に【${targetTeam}チームの専属アナリスト】として、${targetTeam}チームが優勝するためには具体的にどうすればよいか（誰が何位を取るべきか、どのライバルが崩れるべきか等）という視点を中心に、徹底的に分析してください。`;
       }
 
       const promptStr = `あなたはX Gamesのチーム対抗戦のデータアナリストです。現在のシミュレーション結果（Monte Carlo 10,000回）は以下の通りです。
@@ -3837,7 +4333,7 @@ ${teamPromptStr}
 
         const data = await response.json();
         const text = data.candidates[0].content.parts[0].text;
-        
+
         let htmlText = text
           .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
           .replace(/\n/g, '<br>')
@@ -3845,15 +4341,15 @@ ${teamPromptStr}
           .replace(/<li>(.*?)<\/li>/g, '<ul style="margin: 0; padding-left: 20px;"><li>$1</li></ul>')
           .replace(/<\/ul><ul style="margin: 0; padding-left: 20px;">/g, '');
 
-        if(resPanel) {
+        if (resPanel) {
           resPanel.innerHTML = '<div style="padding: 16px; background: rgba(0,0,0,0.4); border-radius: 8px; line-height: 1.6; color: #f8fafc;">' + htmlText + '</div>';
         }
       } catch (err) {
-        if(resPanel) {
+        if (resPanel) {
           resPanel.innerHTML = '<div style="color: #ef4444; padding: 16px;">エラーが発生しました: ' + err.message + '</div>';
         }
       } finally {
-        if(btn) { btn.disabled = false; btn.innerText = '✨ もう一度分析する'; }
+        if (btn) { btn.disabled = false; btn.innerText = '✨ もう一度分析する'; }
       }
     };
 
