@@ -71,6 +71,11 @@
       text-transform: uppercase;
       font-weight: 700;
       color: #ffffff;
+      white-space: nowrap;
+    }
+
+    body[data-lang="ja"] h1 {
+      font-size: clamp(1.8rem, 2.5vw, 2.8rem);
     }
 
     .subtitle {
@@ -1930,6 +1935,7 @@
 
     window.setLang = function (lang) {
       window.appLang = lang;
+      document.body.setAttribute('data-lang', lang);
 
       const enBtn = document.getElementById('lang-en-btn');
       const jaBtn = document.getElementById('lang-ja-btn');
@@ -1957,6 +1963,7 @@
     };
 
     document.addEventListener("DOMContentLoaded", () => {
+      document.body.setAttribute('data-lang', window.appLang);
       document.getElementById('appTitleEl').innerText = window.t('appTitle');
       document.getElementById('refreshBtn').innerText = window.t('refresh');
       const nolaSheet = sheets.find(s => s.key === 'NOLAAthlete');
