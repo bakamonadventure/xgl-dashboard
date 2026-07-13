@@ -4345,6 +4345,29 @@
         overallScoreStr += `- ${team}: ${pts}pt\n`;
       });
 
+      let hasPredictions = false;
+      let predictedOverallScores = { ...currentOverallScores };
+      if (window.simState) {
+        Object.entries(window.simState).forEach(([key, sim]) => {
+          if (sim.points > 0 && sim._predicted) {
+            hasPredictions = true;
+            if (predictedOverallScores[sim.team] !== undefined) {
+              predictedOverallScores[sim.team] += sim.points;
+            }
+          }
+        });
+      }
+
+      let predictedScoreStr = '';
+      if (hasPredictions) {
+        predictedScoreStr = isJa
+          ? '\n【シミュレーター上の予測最終スコア（暫定）】※現在ダッシュボードでユーザーが試算（または自動予測）している最終着地予想です。これをベースにどう逆転するかなどを分析してください。\n'
+          : '\n[Simulator Projected Final Score] *This is the user\'s current projection. Analyze how to overcome this projection.\n';
+        Object.entries(predictedOverallScores).sort((a,b) => b[1] - a[1]).forEach(([team, pts]) => {
+          predictedScoreStr += `- ${team}: ${pts}pt\n`;
+        });
+      }
+
 
       let optStr = '';
       if (optAthletes.size > 0) {
@@ -4396,6 +4419,7 @@
 ${rosterStr}
 ${optStr}
 ${overallScoreStr}
+${predictedScoreStr}
 ${currentStateStr}
 ${remainingEventsStr}
 
