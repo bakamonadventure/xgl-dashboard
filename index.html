@@ -4361,11 +4361,14 @@
       let predictedScoreStr = '';
       if (hasPredictions) {
         predictedScoreStr = isJa
-          ? '\n【シミュレーター上の予測最終スコア（暫定）】※現在ダッシュボードでユーザーが試算（または自動予測）している最終着地予想です。これをベースにどう逆転するかなどを分析してください。\n'
-          : '\n[Simulator Projected Final Score] *This is the user\'s current projection. Analyze how to overcome this projection.\n';
+          ? '\n【シミュレーター上の予測最終スコア（暫定）】※現在ダッシュボード上で自動予測（または試算）されている最終着地予想です。\n'
+          : '\n[Simulator Projected Final Score]\n';
         Object.entries(predictedOverallScores).sort((a,b) => b[1] - a[1]).forEach(([team, pts]) => {
           predictedScoreStr += `- ${team}: ${pts}pt\n`;
         });
+        predictedScoreStr += isJa 
+          ? '★最重要指示：レポートの冒頭（サマリー部分）で、現在の同点状況だけでなく、必ずこの「シミュレーター上の予測最終スコア（暫定）」の具体的なポイント数を提示し、「アベレージ予測通りだと何ポイント差で敗北してしまう見込みなのか」を明確に言語化した上で、それをどう覆すかの分析に進んでください。\n'
+          : '*CRITICAL: In the executive summary, you MUST explicitly state these "Simulator Projected Final Scores" and explain the projected point gap before moving into how to overcome it.\n';
       }
 
 
