@@ -2376,12 +2376,14 @@
     function renderSummary() {
       const active = getSheetMeta(state.activeSheet);
       const data = state.sheetData[active.key];
+
+      if (active.key === 'NOLA') {
+        summaryCards.innerHTML = `<div class="card" style="border-left: 4px solid #a855f7;"><h2>💡 ${window.t('simGuideTitle')}</h2><p class="status" style="font-size: 0.95rem; line-height: 1.5; color: #cbd5e1; text-align: left; padding: 0 8px;">${window.t('simGuideDesc')}</p></div>`;
+        return;
+      }
+
       if (!data || !data.clubs || !data.clubs.length) {
-        if (active.key === 'NOLA') {
-          summaryCards.innerHTML = `<div class="card" style="border-left: 4px solid #a855f7;"><h2>💡 ${window.t('simGuideTitle')}</h2><p class="status" style="font-size: 0.95rem; line-height: 1.5; color: #cbd5e1; text-align: left; padding: 0 8px;">${window.t('simGuideDesc')}</p></div>`;
-        } else {
-          summaryCards.innerHTML = '<div class="card"><h2>Club Summary</h2><p class="status">Click Refresh to load club results for the selected sheet.</p></div>';
-        }
+        summaryCards.innerHTML = '<div class="card"><h2>Club Summary</h2><p class="status">Click Refresh to load club results for the selected sheet.</p></div>';
         return;
       }
 
