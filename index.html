@@ -2986,7 +2986,9 @@
               if (athleteName.toUpperCase().includes('#REF')) continue;
               if (teamStr.toUpperCase().includes('#REF')) teamStr = '';
 
-              athletes.push({ name: athleteName, team: teamStr });
+              if (!athletes.some(a => a.name.toLowerCase() === athleteName.toLowerCase())) {
+                athletes.push({ name: athleteName, team: teamStr });
+              }
             }
             if (athletes.length > 0) {
               disciplines.push({ title, athletes });
