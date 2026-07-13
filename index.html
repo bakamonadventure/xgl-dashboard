@@ -1950,12 +1950,9 @@
       if (scoreSheet) scoreSheet.title = window.t('scoreEntry');
 
       if (typeof createSheetButtons === 'function') createSheetButtons();
-      if (typeof renderSummary === 'function') renderSummary();
-
-      if (state.activeSheet === 'NOLAAthlete' && typeof renderNolaFocusTab === 'function') {
-        renderNolaFocusTab();
-      } else if (state.activeSheet && typeof selectTab === 'function') {
-        selectTab(state.activeSheet);
+      if (typeof renderClinchTracker === 'function') renderClinchTracker();
+      if (state.activeSheet && typeof selectSheet === 'function') {
+        selectSheet(state.activeSheet);
       }
     };
 
