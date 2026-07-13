@@ -4441,6 +4441,8 @@
 - 各競技の順位に応じて、以下のポイントが所属チームに付与されます。
   1位: 100pt / 2位: 80pt / 3位: 60pt / 4位: 40pt / 5位: 30pt / 6位: 20pt / 7位以下: 0pt
 - 最終的に全競技の合計ポイントが最も高いチームが優勝となります。
+- 大会には4チーム以外に「無所属（IND）」の選手も出場します。無所属の選手が上位に入った場合、その順位のポイントはどのチームにも入らず「消費」されます（例: 無所属が1位を取ると、各チームの最高獲得ポイントは2位の80ptになります）。
+- 特定の競技に強い無所属選手がいる場合、彼らが上位を独占することで、ライバルチームの高得点を阻止する展開も考慮してください。
 
 ${rosterStr}
 ${optStr}
@@ -4466,6 +4468,8 @@ ${teamPromptStr}
 - 4 teams (TKO, NY, LA, SP).
 - Points awarded by placement: 1st=100pt, 2nd=80pt, 3rd=60pt, 4th=40pt, 5th=30pt, 6th=20pt, 7th+=0pt.
 - The team with highest total points wins.
+- Independent (IND or No Team) athletes are also competing. If an IND athlete places highly, those points are NOT awarded to any team (e.g. if IND takes 1st, the max points a team can earn is 80pt for 2nd).
+- Consider how strong IND athletes can block rival teams from scoring high points.
 
 ${rosterStr}
 ${optStr}
