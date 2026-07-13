@@ -10,6 +10,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oswald:wght@500;600;700&family=Roboto+Mono:wght@500;700&display=swap"
     rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     :root {
       color-scheme: dark;
@@ -4411,14 +4412,16 @@ ${teamPromptStr}
 3. すでにポイントを獲得済みの選手が、同じ競技でさらにポイントを獲得するような提案はしないでください。
 4. Markdown形式（見出し(##, ###)、太字(**)、箇条書き(- )など）を活用し、ダッシュボード上で美しく読みやすいレポートに仕上げてください。`;
 
+      window.aiChatHistory = [{ role: 'user', parts: [{ text: promptStr }] }];
+
       try {
-        const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=' + apiKey, {
+        const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=' + apiKey, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: promptStr }] }],
+            contents: window.aiChatHistory,
             generationConfig: {
               temperature: 0.1,
               topK: 10,
@@ -4433,17 +4436,10 @@ ${teamPromptStr}
 
         const data = await response.json();
         const text = data.candidates[0].content.parts[0].text;
+        
+        window.aiChatHistory.push({ role: 'model', parts: [{ text: text }] });
+        window.renderAiChat();
 
-        let htmlText = text
-          .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
-          .replace(/\n/g, '<br>')
-          .replace(/\* (.*?)<br>/g, '<li>$1</li>')
-          .replace(/<li>(.*?)<\/li>/g, '<ul style="margin: 0; padding-left: 20px;"><li>$1</li></ul>')
-          .replace(/<\/ul><ul style="margin: 0; padding-left: 20px;">/g, '');
-
-        if (resPanel) {
-          resPanel.innerHTML = '<div style="padding: 16px; background: rgba(0,0,0,0.4); border-radius: 8px; line-height: 1.6; color: #f8fafc;">' + htmlText + '</div>';
-        }
       } catch (err) {
         if (resPanel) {
           resPanel.innerHTML = '<div style="color: #ef4444; padding: 16px;">エラーが発生しました: ' + err.message + '</div>';
@@ -4451,6 +4447,85 @@ ${teamPromptStr}
       } finally {
         if (btn) { btn.disabled = false; btn.innerText = '✨ もう一度分析する'; }
       }
+    };
+
+    window.sendAiChatMessage = async function() {
+      const input = document.getElementById('aiChatInput');
+      const apiKey = document.getElementById('aiApiKeyVal').value;
+      const msg = input.value.trim();
+      if (!msg || !apiKey || !window.aiChatHistory || window.aiChatHistory.length === 0) return;
+      
+      input.value = '';
+      input.disabled = true;
+      const btn = document.getElementById('aiChatSendBtn');
+      btn.disabled = true;
+      btn.innerText = '...';
+
+      window.aiChatHistory.push({ role: 'user', parts: [{ text: msg }] });
+      window.renderAiChat();
+
+      try {
+        const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=' + apiKey, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: window.aiChatHistory,
+            generationConfig: { temperature: 0.2 }
+          })
+        });
+
+        if (!response.ok) throw new Error('API Error: ' + response.status);
+
+        const data = await response.json();
+        const text = data.candidates[0].content.parts[0].text;
+        window.aiChatHistory.push({ role: 'model', parts: [{ text: text }] });
+      } catch (err) {
+        window.aiChatHistory.push({ role: 'model', parts: [{ text: 'エラーが発生しました: ' + err.message }] });
+      } finally {
+        input.disabled = false;
+        btn.disabled = false;
+        btn.innerText = '送信';
+        window.renderAiChat();
+        setTimeout(() => document.getElementById('aiChatInput').focus(), 100);
+      }
+    };
+
+    window.renderAiChat = function() {
+      const resPanel = document.getElementById('aiAnalysisResult');
+      if (!resPanel) return;
+      
+      let html = '<div style="display: flex; flex-direction: column; gap: 16px;">';
+      window.aiChatHistory.forEach((msg, idx) => {
+        if (idx === 0) return; // Skip initial system prompt
+        const isUser = msg.role === 'user';
+        const align = isUser ? 'flex-end' : 'flex-start';
+        const bg = isUser ? 'rgba(168, 85, 247, 0.2)' : 'rgba(0,0,0,0.4)';
+        const border = isUser ? '1px solid rgba(168, 85, 247, 0.4)' : '1px solid rgba(255,255,255,0.1)';
+        
+        let content = typeof marked !== 'undefined' ? marked.parse(msg.parts[0].text) : msg.parts[0].text.replace(/\n/g, '<br>');
+        
+        html += `
+          <div style="align-self: ${align}; max-width: 90%; background: ${bg}; border: ${border}; border-radius: 8px; padding: 12px 16px; line-height: 1.6; color: #f8fafc; font-size: 0.95rem;">
+            ${content}
+          </div>
+        `;
+      });
+      html += '</div>';
+
+      html += `
+        <div style="margin-top: 20px; border-top: 1px solid rgba(168, 85, 247, 0.4); padding-top: 16px;">
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="aiChatInput" placeholder="質問や追加条件を入力..." style="flex: 1; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 10px 16px; color: #fff; outline: none; font-size: 0.95rem;" onkeypress="if(event.key === 'Enter') window.sendAiChatMessage()">
+            <button id="aiChatSendBtn" onclick="window.sendAiChatMessage()" style="background: linear-gradient(135deg, #a855f7, #6366f1); color: #fff; padding: 10px 24px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: transform 0.2s;">送信</button>
+          </div>
+        </div>
+      `;
+      
+      resPanel.innerHTML = html;
+      // Also apply some basic styling to markdown elements inside chat bubbles
+      resPanel.querySelectorAll('ul, ol').forEach(el => { el.style.margin = '8px 0'; el.style.paddingLeft = '24px'; });
+      resPanel.querySelectorAll('li').forEach(el => { el.style.marginBottom = '4px'; });
+      resPanel.querySelectorAll('h1, h2, h3').forEach(el => { el.style.marginTop = '16px'; el.style.marginBottom = '8px'; el.style.color = '#fff'; });
     };
 
     createSheetButtons();
