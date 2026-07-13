@@ -4206,7 +4206,10 @@
               for (let i = r + 1; i < rows.length; i++) {
                 const val = rows[i][c];
                 const teamVal = rows[i][c + 1] ? rows[i][c + 1].trim() : '';
-                if (!val || val.trim() === '' || val.toLowerCase().includes('declined') || val.toLowerCase().includes('alternate') || val === '#REF!') break;
+                if (!val || val.trim() === '' || val === '#REF!') continue;
+                if (val.toLowerCase().includes('declined') || val.toLowerCase().includes('alternate')) break;
+                if (/\\b(skb|bmx|park|vert|street|dirt|trick|whip)\\b/i.test(val) && !val.toLowerCase().includes('athlete')) break;
+                
                 if (isNaN(val)) {
                   const cleanedVal = val.trim();
                   list.push(cleanedVal);
