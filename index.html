@@ -4343,6 +4343,27 @@
         teamPromptStr = `特に【${targetTeam}チームの専属アナリスト】として、${targetTeam}チームが優勝するためには具体的にどうすればよいか（誰が何位を取るべきか、どのライバルが崩れるべきか等）という視点を中心に、徹底的に分析してください。`;
       }
 
+      let remainingEventsStr = isJa
+        ? '\n【今後の競技スケジュールと出場選手（各競技につき各チーム1名まで、指定選手のみ出場）】\n'
+        : '\n[Remaining Events Schedule and Participating Athletes (Max 1 per team per event)]\n';
+      
+      if (state.sheetData && state.sheetData.nolaAthletes) {
+        state.sheetData.nolaAthletes.forEach(disc => {
+          const competingAthletes = [];
+          disc.athletes.forEach(a => {
+            const key = `${disc.title}-${a.name}`.replace(/[^a-zA-Z0-9]/g, '');
+            const sim = window.simState && window.simState[key];
+            // If they don't have a positive score and aren't OPT, they are remaining
+            if (!sim || (sim.points === 0 && String(sim.rank) !== '-1')) {
+              competingAthletes.push(`${a.name} (${a.team || '無所属'})`);
+            }
+          });
+          if (competingAthletes.length > 0) {
+            remainingEventsStr += `- ${disc.title}:\n    ${competingAthletes.join(', ')}\n`;
+          }
+        });
+      }
+
       const promptStr = `あなたはX Gamesのチーム対抗戦のデータアナリストです。現在のシミュレーション結果（Monte Carlo 10,000回）は以下の通りです。
 
 【大会の予備知識】
@@ -4354,13 +4375,19 @@
 ${rosterStr}
 ${optStr}
 ${currentStateStr}
+${remainingEventsStr}
 
 【Monte Carlo 10,000回 シミュレーション結果データ】
 ${mcDataStr}
 
 このデータと大会ルールをもとに、現在のスコア差と残り枠数を考慮し、各チームの勝率や逆転の可能性について、客観的な数値と確率に基づいた冷静で論理的な分析レポートを日本語で作成してください。
 ${teamPromptStr}
-さらに、各チーム（または対象チーム）が優勝するために「具体的にどの選手が何位以上（何ポイント以上）を獲得する必要があるか」など、必要な条件も具体的に提示してください。その際、必ず【欠場・棄権（OPT）の選手一覧】に含まれる選手は提案から除外してください。`;
+さらに、各チーム（または対象チーム）が優勝するために「具体的に今後のどの競技で、誰が何位以上（何ポイント以上）を獲得する必要があるか」など、必要な条件も具体的に提示してください。
+その際、以下の点に厳密に従ってください。
+1. 必ず【今後の競技スケジュールと出場選手】リストにある「まだ出場予定の選手と競技」だけを組み合わせて提案してください。
+2. 絶対に【欠場・棄権（OPT）の選手一覧】に含まれる選手は提案から除外してください。
+3. すでにポイントを獲得済みの選手が、同じ競技でさらにポイントを獲得するような提案はしないでください。
+4. Markdown形式（見出し(##, ###)、太字(**)、箇条書き(- )など）を活用し、ダッシュボード上で美しく読みやすいレポートに仕上げてください。`;
 
       try {
         const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=' + apiKey, {
