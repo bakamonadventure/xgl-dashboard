@@ -4327,12 +4327,15 @@
           const nameStr = key.split('-').pop();
           const name = nameStr.replace(/([A-Z])/g, ' $1').trim();
 
+          let tName = String(sim.team).trim().toUpperCase();
+          if (tName === 'TOK' || tName === 'TK' || tName === 'TOKYO') tName = 'TKO';
+
           if (sim.points === -1 || String(sim.rank) === '-1') {
             optAthletes.add(name);
           } else if (sim.points > 0 && !sim._predicted) {
-            currentStateStr += `- ${name} (${sim.team}): ${sim.points}pt\n`;
-            if (currentOverallScores[sim.team] !== undefined) {
-              currentOverallScores[sim.team] += sim.points;
+            currentStateStr += `- ${name} (${tName}): ${sim.points}pt\n`;
+            if (currentOverallScores[tName] !== undefined) {
+              currentOverallScores[tName] += sim.points;
             }
           }
         });
@@ -4349,10 +4352,13 @@
       let predictedOverallScores = { ...currentOverallScores };
       if (window.simState) {
         Object.entries(window.simState).forEach(([key, sim]) => {
+          let tName = String(sim.team).trim().toUpperCase();
+          if (tName === 'TOK' || tName === 'TK' || tName === 'TOKYO') tName = 'TKO';
+
           if (sim.points > 0 && sim._predicted) {
             hasPredictions = true;
-            if (predictedOverallScores[sim.team] !== undefined) {
-              predictedOverallScores[sim.team] += sim.points;
+            if (predictedOverallScores[tName] !== undefined) {
+              predictedOverallScores[tName] += sim.points;
             }
           }
         });
