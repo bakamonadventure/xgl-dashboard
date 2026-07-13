@@ -3724,11 +3724,8 @@
             </div>
           `;
 
-          const sortedAthletes = [...disc.athletes].sort((a, b) => {
-            const ta = a.team ? a.team.toUpperCase() : 'ZZZ';
-            const tb = b.team ? b.team.toUpperCase() : 'ZZZ';
-            return ta.localeCompare(tb) || a.name.localeCompare(b.name);
-          });
+          const sortedAthletes = disc.athletes;
+
 
           sortedAthletes.forEach((ath) => {
             const key = `${disc.title}-${ath.name}`.replace(/[^a-zA-Z0-9]/g, '');
