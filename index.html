@@ -3884,7 +3884,6 @@
         const sec = SE_CELL_MAP[sectionKey];
         html += `<div class="se-section">`;
         html += `<div class="se-section-title">${sectionIcons[sectionKey]} ${window.t(sec.label)}</div>`;
-        html += `<div style="overflow-x: auto;"><table class="se-table">`;
 
         // Data lists for autocomplete
         const datalists = [];
@@ -3899,6 +3898,8 @@
           datalists.push(`<datalist id="${listId}">${optionsHtml}</datalist>`);
         });
         html += datalists.join('');
+
+        html += `<div style="overflow-x: auto;"><table class="se-table">`;
 
         // Header row
         html += `<thead><tr><th>${window.t('sePlace')}</th>`;
