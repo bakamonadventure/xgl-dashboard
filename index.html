@@ -4208,7 +4208,7 @@
                 const teamVal = rows[i][c + 1] ? rows[i][c + 1].trim() : '';
                 if (!val || val.trim() === '' || val === '#REF!') continue;
                 if (val.toLowerCase().includes('declined') || val.toLowerCase().includes('alternate')) break;
-                if (/\\b(skb|bmx|park|vert|street|dirt|trick|whip)\\b/i.test(val) && !val.toLowerCase().includes('athlete')) break;
+                if (mapHeaderToEvKey(val)) break;
                 
                 if (isNaN(val)) {
                   const cleanedVal = val.trim();
