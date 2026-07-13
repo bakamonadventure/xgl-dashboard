@@ -4309,9 +4309,22 @@
       }
 
       let currentStateStr = isJa
-        ? '【現在の各競技のシミュレーション状況（確定または予測スコア）】\n'
-        : '[Current Simulation Status for Events (Confirmed or Predicted Scores)]\n';
+        ? '【NOLA大会での各競技の確定スコア（過去大会は除く）】\n'
+        : '[Confirmed Scores for NOLA Events (Excluding Past Events)]\n';
       const optAthletes = new Set();
+      
+      let currentOverallScores = { 'TKO': 0, 'NY': 0, 'LA': 0, 'SP': 0 };
+      if (window.pastPlacements) {
+        window.pastPlacements.forEach(p => {
+          if (p.sheetKey !== 'NOLA') {
+            const t = window.getTeamForAthlete(p.athleteName);
+            if (t && currentOverallScores[t.name] !== undefined) {
+              currentOverallScores[t.name] += p.points;
+            }
+          }
+        });
+      }
+
       if (window.simState) {
         Object.entries(window.simState).forEach(([key, sim]) => {
           const nameStr = key.split('-').pop();
@@ -4321,9 +4334,20 @@
             optAthletes.add(name);
           } else if (sim.points > 0 && !sim._predicted) {
             currentStateStr += `- ${name} (${sim.team}): ${sim.points}pt\n`;
+            if (currentOverallScores[sim.team] !== undefined) {
+              currentOverallScores[sim.team] += sim.points;
+            }
           }
         });
       }
+      
+      let overallScoreStr = isJa 
+        ? '【現在の総合スコア（過去大会 ＋ NOLA確定分の合計）】※優勝条件の基準となる最重要スコアです。\n' 
+        : '[Current Overall Total Score (Past Events + NOLA Confirmed)] *CRITICAL: This is the baseline for winning.\n';
+      Object.entries(currentOverallScores).sort((a,b) => b[1] - a[1]).forEach(([team, pts]) => {
+        overallScoreStr += `- ${team}: ${pts}pt\n`;
+      });
+
 
       let optStr = '';
       if (optAthletes.size > 0) {
@@ -4373,6 +4397,7 @@
 
 ${rosterStr}
 ${optStr}
+${overallScoreStr}
 ${currentStateStr}
 ${remainingEventsStr}
 
