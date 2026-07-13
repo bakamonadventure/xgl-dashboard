@@ -1950,6 +1950,7 @@
       if (scoreSheet) scoreSheet.title = window.t('scoreEntry');
 
       if (typeof createSheetButtons === 'function') createSheetButtons();
+      if (typeof renderSummary === 'function') renderSummary();
 
       if (state.activeSheet === 'NOLAAthlete' && typeof renderNolaFocusTab === 'function') {
         renderNolaFocusTab();
