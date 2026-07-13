@@ -1862,6 +1862,8 @@
         'mcAnalysisLine1Gen': '現在確定しているポイントでは、我々【{team}】は最大のライバルである{rival}に対して {diff}pt {leadStr}います。',
         'mcAnalysisLine2Gen': '今後の残り種目において、我々の出場枠（ポイント獲得チャンス）が {tSlots}枠 なのに対し、{rival}は {rivalSlots}枠 残っています。',
         'mcAnalysisLine3': 'この「現在の点差」と「残りチャンスの差」を考慮すると、我々の逆転・逃げ切りの優勝確率は {rate}% となります。',
+        'simGuideTitle': 'シミュレーターの使い方',
+        'simGuideDesc': 'ドロップダウンから順位を選択してスコアをシミュレーションします。「過去実績から予測」でアベレージから自動入力。「Monte Carlo」で確率的な勝率を計算します。',
         'resetSimBtn': '選択をリセット',
         'scoreEntry': '✏️ スコア入力',
         'seTitle': 'スコア入力',
@@ -1912,7 +1914,9 @@
         'aiNy': 'NY目線',
         'aiLa': 'LA目線',
         'aiSp': 'SP目線',
-        'aiRunBtn': '✨ AI分析を実行 (3.1 Pro)'
+        'aiRunBtn': '✨ AI分析を実行 (3.1 Pro)',
+        'simGuideTitle': 'How to use Simulator',
+        'simGuideDesc': 'Select a rank from the dropdown to simulate the score. Use "Predict from Past" to auto-fill. Use "Monte Carlo" to calculate win probabilities.'
       }
     };
 
@@ -2373,7 +2377,11 @@
       const active = getSheetMeta(state.activeSheet);
       const data = state.sheetData[active.key];
       if (!data || !data.clubs || !data.clubs.length) {
-        summaryCards.innerHTML = '<div class="card"><h2>Club Summary</h2><p class="status">Click Refresh to load club results for the selected sheet.</p></div>';
+        if (active.key === 'NOLA') {
+          summaryCards.innerHTML = `<div class="card" style="border-left: 4px solid #a855f7;"><h2>💡 ${window.t('simGuideTitle')}</h2><p class="status" style="font-size: 0.95rem; line-height: 1.5; color: #cbd5e1; text-align: left; padding: 0 8px;">${window.t('simGuideDesc')}</p></div>`;
+        } else {
+          summaryCards.innerHTML = '<div class="card"><h2>Club Summary</h2><p class="status">Click Refresh to load club results for the selected sheet.</p></div>';
+        }
         return;
       }
 
@@ -4390,10 +4398,13 @@
       const targetTeam = targetTeamEl ? targetTeamEl.value : 'ALL';
       let teamPromptStr = '';
       if (targetTeam === 'ALL') {
-        teamPromptStr = '全チームを対象に、総合的な視点で分析してください。';
+        teamPromptStr = isJa 
+          ? '全チームを対象に、総合的な視点で分析してください。'
+          : 'Analyze comprehensively from the perspective of all teams.';
       } else {
-        teamPromptStr = `特に【${targetTeam}チームの専属アナリスト】として、${targetTeam}チームが優勝するためには具体的にどうすればよいか（誰が何位を取るべきか、どのライバルが崩れるべきか等）という視点を中心に、徹底的に分析してください。
-そして分析の結論として、必ず【今後の競技スケジュールと出場選手】のリストに記載されている「まだ出場予定の${targetTeam}チームの全選手（全員）」に対して、優勝するために最低限必要な「求められる戦績（目安となる順位やポイント）」をリストアップして提示してください。`;
+        teamPromptStr = isJa
+          ? `特に【${targetTeam}チームの専属アナリスト】として、${targetTeam}チームが優勝するためには具体的にどうすればよいか（誰が何位を取るべきか、どのライバルが崩れるべきか等）という視点を中心に、徹底的に分析してください。\nそして分析の結論として、必ず【今後の競技スケジュールと出場選手】のリストに記載されている「まだ出場予定の${targetTeam}チームの全選手（全員）」に対して、優勝するために最低限必要な「求められる戦績（目安となる順位やポイント）」をリストアップして提示してください。`
+          : `As the exclusive analyst for Team ${targetTeam}, thoroughly analyze exactly what ${targetTeam} needs to do to win (who needs what placement, which rivals need to falter, etc.).\nAs a conclusion, you MUST list out the minimum "required results (target placements or points)" for ALL remaining athletes of Team ${targetTeam} listed in the [Remaining Events Schedule].`;
       }
 
       let remainingEventsStr = isJa
@@ -4406,9 +4417,8 @@
           disc.athletes.forEach(a => {
             const key = `${disc.title}-${a.name}`.replace(/[^a-zA-Z0-9]/g, '');
             const sim = window.simState && window.simState[key];
-            // If they don't have a positive score and aren't OPT, they are remaining
             if (!sim || (sim.points === 0 && String(sim.rank) !== '-1')) {
-              competingAthletes.push(`${a.name} (${a.team || '無所属'})`);
+              competingAthletes.push(`${a.name} (${a.team || (isJa ? '無所属' : 'No Team')})`);
             }
           });
           if (competingAthletes.length > 0) {
@@ -4417,7 +4427,7 @@
         });
       }
 
-      const promptStr = `あなたはX Gamesのチーム対抗戦のデータアナリストです。現在のシミュレーション結果（Monte Carlo 10,000回）は以下の通りです。
+      const promptStr = isJa ? `あなたはX Gamesのチーム対抗戦のデータアナリストです。現在のシミュレーション結果（Monte Carlo 10,000回）は以下の通りです。
 
 【大会の予備知識】
 - 本大会は4チーム（TKO, NY, LA, SP）による対抗戦です。
@@ -4442,7 +4452,32 @@ ${teamPromptStr}
 1. 必ず【今後の競技スケジュールと出場選手】リストにある「まだ出場予定の選手と競技」だけを組み合わせて提案してください。
 2. 絶対に【欠場・棄権（OPT）の選手一覧】に含まれる選手は提案から除外してください。
 3. すでにポイントを獲得済みの選手が、同じ競技でさらにポイントを獲得するような提案はしないでください。
-4. Markdown形式（見出し(##, ###)、太字(**)、箇条書き(- )など）を活用し、ダッシュボード上で美しく読みやすいレポートに仕上げてください。`;
+4. Markdown形式（見出し(##, ###)、太字(**)、箇条書き(- )など）を活用し、ダッシュボード上で美しく読みやすいレポートに仕上げてください。`
+      : `You are a data analyst for the X Games team competition. The current Monte Carlo simulation (10,000 iterations) results are as follows.
+
+[Tournament Background]
+- 4 teams (TKO, NY, LA, SP).
+- Points awarded by placement: 1st=100pt, 2nd=80pt, 3rd=60pt, 4th=40pt, 5th=30pt, 6th=20pt, 7th+=0pt.
+- The team with highest total points wins.
+
+${rosterStr}
+${optStr}
+${overallScoreStr}
+${predictedScoreStr}
+${currentStateStr}
+${remainingEventsStr}
+
+[Monte Carlo 10,000 Iterations Data]
+${mcDataStr}
+
+Based on this data and rules, write an objective, logical analysis report in English about win rates and comeback possibilities.
+${teamPromptStr}
+Furthermore, you must provide concrete required conditions for the target team to win (e.g., "who needs to get what rank in which event").
+Strictly follow these rules:
+1. ONLY suggest athletes and events listed in the [Remaining Events Schedule].
+2. NEVER suggest athletes listed in the [Absent/OPT Athletes List].
+3. Do not suggest a player to earn points in an event if they already confirmed points.
+4. Output a beautiful, readable report using Markdown (##, ###, **, -).`;
 
       window.aiChatHistory = [{ role: 'user', parts: [{ text: promptStr }] }];
 
