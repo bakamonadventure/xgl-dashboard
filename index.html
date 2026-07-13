@@ -2483,6 +2483,7 @@
           ];
 
           const placeRowOffset = isOldFormat ? 2 : 1;
+          const columnEnded = {}; // Track which columns have ended (hit a blank cell)
 
           for (let p = 0; p < 12; p++) {
             const placeRow = rawRows[i + placeRowOffset + p]?.map(normalizeCell);
@@ -2493,8 +2494,20 @@
               if (isNaN(placeVal)) return;
 
               for (let col = g.startCol; col <= g.endCol; col++) {
+                if (columnEnded[col]) continue;
+                
                 const eventName = headerRow[col];
                 const athleteName = placeRow[col];
+                
+                if (!athleteName || athleteName === '') {
+                  columnEnded[col] = true; // Mark column as ended
+                  continue;
+                }
+                
+                if (athleteName.toLowerCase().includes('alt') && !athleteName.toLowerCase().includes('was')) {
+                  continue; // Explicit alternate, skip them
+                }
+
                 if (athleteName && athleteName !== '') {
                   const points = pointsMap[placeVal] || 0;
                   placements.push({
@@ -2992,8 +3005,11 @@
             }
 
             for (let i = r + 1; i < rawRows.length; i++) {
-              if (rawRows[i].length <= aCol) continue;
+              if (rawRows[i].length <= aCol) break; // End of column
               const athleteName = normalizeCell(rawRows[i][aCol]);
+              const tName = normalizeCell(rawRows[i][tCol]);
+
+              if (!athleteName && !tName) break; // Blank row signifies end of starters, exclude Alternates
 
               if (!athleteName) continue;
               if (/^[0-9]+$/.test(athleteName)) continue;
