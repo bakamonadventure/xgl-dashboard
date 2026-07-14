@@ -1734,8 +1734,8 @@
         'needsMore': 'Needs {pt} more points',
         'finalEventMax': 'Final Event Max: +{pt}pt (Target Lead: {tgt}pt)',
         'liveLeaderboard': '🏆 Projected Global Points',
-        'actualResults': 'Actual Results',
-        'toolsSimulator': 'Tools / Simulator',
+        'actualResults': 'Data & Score Entry',
+        'toolsSimulator': 'Simulator',
         'base': 'Base:',
         'simulated': 'Simulated:',
         'simulatorTitle': '✨ What-If Simulator: All Disciplines (Chronological)',
@@ -1842,8 +1842,8 @@
         'needsMore': 'あと {pt} ポイント必要',
         'finalEventMax': '最終種目最大: +{pt}pt (目標リード: {tgt}pt)',
         'liveLeaderboard': '🏆 シミュレーション総合ポイント',
-        'actualResults': '確定リザルト',
-        'toolsSimulator': '予測シミュレーター・管理',
+        'actualResults': 'データ & スコア入力',
+        'toolsSimulator': 'シミュレーター',
         'base': 'ベース:',
         'simulated': 'シミュレーション:',
         'simulatorTitle': '✨ What-If シミュレーター (時系列順)',
@@ -2019,7 +2019,7 @@
         button.textContent = sheet.title;
         button.dataset.key = sheet.key;
         button.addEventListener('click', () => selectSheet(sheet.key));
-        if (sheet.isFocusTab || sheet.isScoreEntry) {
+        if (sheet.isFocusTab) {
           simTabs.appendChild(button);
         } else {
           actualTabs.appendChild(button);
