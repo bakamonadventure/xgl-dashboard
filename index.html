@@ -1596,6 +1596,57 @@
         width: 90px;
       }
     }
+    .ai-chat-bubble {
+      overflow-x: auto;
+      word-break: break-word;
+      align-self: flex-start;
+      max-width: 90%;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 12px 16px;
+      line-height: 1.6;
+      color: #f8fafc;
+      font-size: 0.95rem;
+    }
+    .ai-chat-bubble.user {
+      align-self: flex-end;
+      background: rgba(168, 85, 247, 0.2);
+      border: 1px solid rgba(168, 85, 247, 0.4);
+    }
+    .ai-chat-bubble table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      min-width: unset;
+    }
+    .ai-chat-bubble th, .ai-chat-bubble td {
+      padding: 8px 12px;
+      text-align: left;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .ai-chat-bubble th {
+      background: rgba(255,255,255,0.05);
+    }
+    .ai-chat-bubble h1, .ai-chat-bubble h2, .ai-chat-bubble h3 {
+      color: #fff;
+      margin-top: 1.2em;
+      margin-bottom: 0.5em;
+    }
+    .ai-chat-bubble p {
+      margin-bottom: 1em;
+    }
+    .ai-chat-bubble ul, .ai-chat-bubble ol {
+      margin-left: 1.5em;
+      margin-bottom: 1em;
+    }
+    .ai-chat-bubble li {
+      margin-bottom: 0.5em;
+    }
+    .ai-chat-bubble p:last-child, .ai-chat-bubble ul:last-child {
+      margin-bottom: 0;
+    }
   </style>
 </head>
 
@@ -4596,14 +4647,10 @@ Strictly follow these rules:
       window.aiChatHistory.forEach((msg, idx) => {
         if (idx === 0) return; // Skip initial system prompt
         const isUser = msg.role === 'user';
-        const align = isUser ? 'flex-end' : 'flex-start';
-        const bg = isUser ? 'rgba(168, 85, 247, 0.2)' : 'rgba(0,0,0,0.4)';
-        const border = isUser ? '1px solid rgba(168, 85, 247, 0.4)' : '1px solid rgba(255,255,255,0.1)';
-        
         let content = typeof marked !== 'undefined' ? marked.parse(msg.parts[0].text) : msg.parts[0].text.replace(/\n/g, '<br>');
         
         html += `
-          <div style="align-self: ${align}; max-width: 90%; background: ${bg}; border: ${border}; border-radius: 8px; padding: 12px 16px; line-height: 1.6; color: #f8fafc; font-size: 0.95rem;">
+          <div class="ai-chat-bubble ${isUser ? 'user' : ''}">
             ${content}
           </div>
         `;
