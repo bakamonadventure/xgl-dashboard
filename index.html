@@ -1687,7 +1687,16 @@
 
     <div class="content">
       <section class="section">
-        <div class="tabs" id="tabs"></div>
+        <div id="tabsContainer" style="display: flex; flex-direction: column; gap: 16px;">
+          <div>
+            <div id="actualTabsLabel" style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;"></div>
+            <div class="tabs" id="actualTabs"></div>
+          </div>
+          <div>
+            <div id="simTabsLabel" style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;"></div>
+            <div class="tabs" id="simTabs"></div>
+          </div>
+        </div>
       </section>
       
       <div class="grid cards" id="summaryCards" style="margin-bottom: 24px;"></div>
@@ -1724,7 +1733,9 @@
         'safe': 'SAFE! (Clinched)',
         'needsMore': 'Needs {pt} more points',
         'finalEventMax': 'Final Event Max: +{pt}pt (Target Lead: {tgt}pt)',
-        'liveLeaderboard': '🏆 Live Global Leaderboard',
+        'liveLeaderboard': '🏆 Projected Global Points',
+        'actualResults': 'Actual Results',
+        'toolsSimulator': 'Tools / Simulator',
         'base': 'Base:',
         'simulated': 'Simulated:',
         'simulatorTitle': '✨ What-If Simulator: All Disciplines (Chronological)',
@@ -1830,7 +1841,9 @@
         'safe': '確定！ (SAFE)',
         'needsMore': 'あと {pt} ポイント必要',
         'finalEventMax': '最終種目最大: +{pt}pt (目標リード: {tgt}pt)',
-        'liveLeaderboard': '🏆 ライブ グローバル リーダーボード',
+        'liveLeaderboard': '🏆 シミュレーション総合ポイント',
+        'actualResults': '確定リザルト',
+        'toolsSimulator': '予測シミュレーター・管理',
         'base': 'ベース:',
         'simulated': 'シミュレーション:',
         'simulatorTitle': '✨ What-If シミュレーター (時系列順)',
@@ -1948,6 +1961,11 @@
       document.getElementById('refreshBtn').innerText = window.t('refresh');
       const footerEl = document.getElementById('footerTextEl');
       if (footerEl) footerEl.innerText = window.t('footerText');
+      
+      const actualTabsLabel = document.getElementById('actualTabsLabel');
+      if (actualTabsLabel) actualTabsLabel.innerText = window.t('actualResults');
+      const simTabsLabel = document.getElementById('simTabsLabel');
+      if (simTabsLabel) simTabsLabel.innerText = window.t('toolsSimulator');
 
       const nolaSheet = sheets.find(s => s.key === 'NOLAAthlete');
       if (nolaSheet) nolaSheet.title = window.t('nolaSimulator');
@@ -1985,21 +2003,27 @@
     };
 
     const summaryCards = document.getElementById('summaryCards');
-    const tabs = document.getElementById('tabs');
     const refreshBtn = document.getElementById('refreshBtn');
     const detailTitle = document.getElementById('detailTitle');
     const detailStatus = document.getElementById('detailStatus');
     const tableContainer = document.getElementById('tableContainer');
 
     function createSheetButtons() {
-      tabs.innerHTML = '';
+      const actualTabs = document.getElementById('actualTabs');
+      const simTabs = document.getElementById('simTabs');
+      actualTabs.innerHTML = '';
+      simTabs.innerHTML = '';
       sheets.forEach((sheet, index) => {
         const button = document.createElement('button');
         button.className = 'tab-button';
         button.textContent = sheet.title;
         button.dataset.key = sheet.key;
         button.addEventListener('click', () => selectSheet(sheet.key));
-        tabs.appendChild(button);
+        if (sheet.isFocusTab || sheet.isScoreEntry) {
+          simTabs.appendChild(button);
+        } else {
+          actualTabs.appendChild(button);
+        }
       });
       if (!state.activeSheet) {
         selectSheet(sheets[0].key);
@@ -2009,7 +2033,7 @@
     }
 
     function updateActiveTab() {
-      const buttons = tabs.querySelectorAll('.tab-button');
+      const buttons = document.querySelectorAll('.tab-button');
       buttons.forEach(btn => {
         btn.classList.toggle('active', btn.dataset.key === state.activeSheet);
       });
