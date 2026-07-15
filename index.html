@@ -3885,6 +3885,28 @@
         tableContainer.innerHTML = html;
       }
 
+
+      window.updateSim = function (key, team, rankStr) {
+        if (rankStr === '0') {
+          delete window.simState[key];
+        } else {
+          let pts = 0;
+          if (rankStr === '100') pts = 100;
+          else if (rankStr === '80') pts = 80;
+          else if (rankStr === '60') pts = 60;
+          else if (rankStr === '40') pts = 40;
+          else if (rankStr === '30') pts = 30;
+          else if (rankStr === '20') pts = 20;
+          else if (rankStr === '-1') pts = -1;
+
+          window.simState[key] = { team: team, points: pts, rank: rankStr };
+        }
+        renderContent();
+      };
+
+      renderContent();
+    }
+
       window.liveTrackerState = { selectedEvent: '', ranks: {} };
 
       window.ltSelectEvent = function(val) {
@@ -4023,27 +4045,6 @@
         console.error(err);
         tableContainer.innerHTML = `<div class="card" style="color: #ef4444;">Error in Live Tracker: ${err.message}</div>`;
       }
-    }
-
-      window.updateSim = function (key, team, rankStr) {
-        if (rankStr === '0') {
-          delete window.simState[key];
-        } else {
-          let pts = 0;
-          if (rankStr === '100') pts = 100;
-          else if (rankStr === '80') pts = 80;
-          else if (rankStr === '60') pts = 60;
-          else if (rankStr === '40') pts = 40;
-          else if (rankStr === '30') pts = 30;
-          else if (rankStr === '20') pts = 20;
-          else if (rankStr === '-1') pts = -1;
-
-          window.simState[key] = { team: team, points: pts, rank: rankStr };
-        }
-        renderContent();
-      };
-
-      renderContent();
     }
 
     async function loadCsv(sheet) {
