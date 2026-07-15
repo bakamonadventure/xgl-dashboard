@@ -1600,11 +1600,12 @@
       overflow-x: auto;
       word-break: break-word;
       align-self: flex-start;
-      max-width: 90%;
+      max-width: 100%;
+      width: 100%;
       background: rgba(0,0,0,0.4);
       border: 1px solid rgba(255,255,255,0.1);
       border-radius: 8px;
-      padding: 12px 16px;
+      padding: 20px 24px;
       line-height: 1.6;
       color: #f8fafc;
       font-size: 0.95rem;
@@ -1631,8 +1632,24 @@
     }
     .ai-chat-bubble h1, .ai-chat-bubble h2, .ai-chat-bubble h3 {
       color: #fff;
-      margin-top: 1.2em;
-      margin-bottom: 0.5em;
+      margin-top: 1.5em;
+      margin-bottom: 0.8em;
+      font-weight: bold;
+      letter-spacing: normal;
+      text-transform: none;
+    }
+    .ai-chat-bubble h1 {
+      font-size: 1.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+      padding-bottom: 8px;
+    }
+    .ai-chat-bubble h2 {
+      font-size: 1.25rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding-bottom: 6px;
+    }
+    .ai-chat-bubble h3 {
+      font-size: 1.1rem;
     }
     .ai-chat-bubble p {
       margin-bottom: 1em;
@@ -4658,7 +4675,7 @@ Strictly follow these rules:
       });
       if (window.aiChatIsLoading) {
         html += `
-          <div style="align-self: flex-start; max-width: 90%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px 16px; line-height: 1.6; color: #cbd5e1; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+          <div style="align-self: flex-start; max-width: 100%; width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 20px 24px; line-height: 1.6; color: #cbd5e1; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
             <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" stroke="#a855f7" class="ai-spinner">
               <style>.ai-spinner{animation: ai-spin 1s linear infinite;} @keyframes ai-spin { 100% { transform: rotate(360deg); } }</style>
               <circle cx="12" cy="12" r="10" fill="none" stroke-width="3" stroke-linecap="round" stroke-dasharray="16 32"></circle>
