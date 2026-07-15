@@ -2930,6 +2930,11 @@
         return;
       }
 
+      if (sheetKey === 'LiveTracker') {
+        renderLiveTrackerTab();
+        return;
+      }
+
       if (!data) {
         detailStatus.innerHTML = `${window.t('status')} <span>${window.t('statusNotLoaded')}</span> | ${window.t('clickRefresh')}`;
         tableContainer.innerHTML = `<p>${window.t('notLoadedClickRefresh')}</p>`;
@@ -2947,10 +2952,6 @@
         return;
       }
 
-      if (sheetKey === 'LiveTracker') {
-        renderLiveTrackerTab();
-        return;
-      }
 
       const rowCount = data.rows.length;
       const visibleHeaders = data.headers.filter(header => !/(Attendances?|MAX POINTS)/i.test(header));
