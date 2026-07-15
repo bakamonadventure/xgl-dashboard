@@ -3899,11 +3899,13 @@
       };
 
       function renderLiveTrackerTab() {
-        const data = state.sheetData['NOLAAthlete'];
-        if (!data || !data.nolaAthletes) {
-          tableContainer.innerHTML = `<p>${window.t('notLoadedClickRefresh')}</p>`;
-          return;
-        }
+        try {
+          detailStatus.innerHTML = `${window.t('status')} <span>Live Mode</span>`;
+          const data = state.sheetData['NOLAAthlete'];
+          if (!data || !data.nolaAthletes) {
+            tableContainer.innerHTML = `<p>${window.t('notLoadedClickRefresh')}</p>`;
+            return;
+          }
 
         let optionsHtml = `<option value="">${window.t('selectDiscipline')}</option>`;
         data.nolaAthletes.forEach(disc => {
@@ -4017,7 +4019,11 @@
         `;
 
         tableContainer.innerHTML = html;
+      } catch (err) {
+        console.error(err);
+        tableContainer.innerHTML = `<div class="card" style="color: #ef4444;">Error in Live Tracker: ${err.message}</div>`;
       }
+    }
 
       window.updateSim = function (key, team, rankStr) {
         if (rankStr === '0') {
