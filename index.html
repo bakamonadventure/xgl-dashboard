@@ -3892,8 +3892,13 @@
         renderLiveTrackerTab();
       };
 
-      window.ltUpdateRank = function(athName, team, val) {
-        window.liveTrackerState.ranks[athName] = { team: team, rank: val };
+      window.ltUpdateRank = function(rankValue, athString) {
+        if (!athString) {
+          delete window.liveTrackerState.ranks[rankValue];
+        } else {
+          const parts = athString.split('|');
+          window.liveTrackerState.ranks[rankValue] = { name: parts[0], team: parts[1] || '' };
+        }
         renderLiveTrackerTab();
       };
 
@@ -3940,13 +3945,12 @@
         }
 
         const livePoints = { 'TKO': 0, 'NY': 0, 'LA': 0, 'SP': 0 };
-        const ptsMap = { '100': 100, '80': 80, '60': 60, '40': 40, '30': 30, '20': 20 };
         
-        Object.values(window.liveTrackerState.ranks).forEach(r => {
+        Object.entries(window.liveTrackerState.ranks).forEach(([rankVal, r]) => {
           let tName = String(r.team).trim().toUpperCase();
           if (tName === 'TOK' || tName === 'TK') tName = 'TKO';
-          if (livePoints[tName] !== undefined && ptsMap[r.rank]) {
-            livePoints[tName] += ptsMap[r.rank];
+          if (livePoints[tName] !== undefined) {
+            livePoints[tName] += Number(rankVal);
           }
         });
 
@@ -3979,26 +3983,35 @@
         lbHtml += `</div></div>`;
 
         let athHtml = `<div class="card" style="border-top: 4px solid #ef4444;"><h3 style="margin-top:0; color: #fff;">${selectedDisc.title}</h3><div style="display: flex; flex-direction: column; gap: 12px; margin-top: 20px;">`;
-        selectedDisc.athletes.forEach(ath => {
-           const tPalette = ath.team ? getTeamPalette(ath.team) : { primary: 'rgba(255,255,255,0.15)' };
-           const tContrast = ath.team ? (tPalette.text || getContrastColor(tPalette.primary)) : '#cbd5e1';
-           const badgeLabel = ath.team || 'IND';
-           const r = window.liveTrackerState.ranks[ath.name]?.rank || '0';
+        
+        const rankList = [
+          { val: '100', label: '1st', color: '#ffd700' },
+          { val: '80', label: '2nd', color: '#c0c0c0' },
+          { val: '60', label: '3rd', color: '#cd7f32' },
+          { val: '40', label: '4th', color: '#94a3b8' },
+          { val: '30', label: '5th', color: '#94a3b8' },
+          { val: '20', label: '6th', color: '#94a3b8' }
+        ];
+
+        rankList.forEach(rank => {
+           const currentSelection = window.liveTrackerState.ranks[rank.val];
+           const selValue = currentSelection ? `${currentSelection.name}|${currentSelection.team}` : '';
+           
+           const tPalette = currentSelection && currentSelection.team ? getTeamPalette(currentSelection.team) : null;
+           const borderStyle = tPalette ? `border-left: 4px solid ${tPalette.primary};` : 'border-left: 4px solid transparent;';
+
+           let optionsHtmlWithSelection = `<option value="">--</option>`;
+           selectedDisc.athletes.forEach(ath => {
+             const val = `${ath.name.replace(/'/g, "\\'")}|${ath.team || ''}`;
+             const isSel = val === selValue ? 'selected' : '';
+             optionsHtmlWithSelection += `<option value="${val}" ${isSel}>${ath.name} (${ath.team || 'IND'})</option>`;
+           });
 
            athHtml += `
-             <div class="sim-row" style="padding: 16px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px;">
-                <div style="display: flex; align-items: center; gap: 12px; flex-grow: 1; overflow: hidden;">
-                  <span class="sim-athlete-badge" style="background: ${tPalette.primary}; color: ${tContrast}; padding: 4px 12px; font-size: 0.9rem;">${badgeLabel}</span>
-                  <strong style="color: #fff; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${ath.name}</strong>
-                </div>
-                <select class="sim-select" style="padding: 10px; font-size: 1rem; border-radius: 6px; width: 120px;" onchange="window.ltUpdateRank('${ath.name.replace(/'/g, "\\'")}', '${ath.team || ''}', this.value)">
-                  <option value="0" ${r === '0' ? 'selected' : ''}>--</option>
-                  <option value="100" ${r === '100' ? 'selected' : ''}>1st</option>
-                  <option value="80" ${r === '80' ? 'selected' : ''}>2nd</option>
-                  <option value="60" ${r === '60' ? 'selected' : ''}>3rd</option>
-                  <option value="40" ${r === '40' ? 'selected' : ''}>4th</option>
-                  <option value="30" ${r === '30' ? 'selected' : ''}>5th</option>
-                  <option value="20" ${r === '20' ? 'selected' : ''}>6th</option>
+             <div class="sim-row" style="padding: 16px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; ${borderStyle} display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                <strong style="color: ${rank.color}; font-size: 1.2rem; width: 50px;">${rank.label}</strong>
+                <select class="sim-select" style="padding: 10px; font-size: 1rem; border-radius: 6px; flex-grow: 1; max-width: 250px; text-overflow: ellipsis; cursor: pointer;" onchange="window.ltUpdateRank('${rank.val}', this.value)">
+                  ${optionsHtmlWithSelection}
                 </select>
              </div>
            `;
