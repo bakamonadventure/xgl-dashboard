@@ -4034,9 +4034,29 @@
         athHtml += `</div></div>`;
 
         html += `
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
-            ${athHtml}
-            ${lbHtml}
+          <style>
+            .lt-grid {
+               display: grid;
+               grid-template-columns: 1fr 350px;
+               gap: 24px;
+               align-items: start;
+            }
+            @media (max-width: 768px) {
+               .lt-grid {
+                 grid-template-columns: 1fr;
+               }
+               .lt-lb-container {
+                 order: -1;
+               }
+            }
+          </style>
+          <div class="lt-grid">
+            <div>
+              ${athHtml}
+            </div>
+            <div class="lt-lb-container" style="position: sticky; top: 100px; z-index: 10;">
+              ${lbHtml}
+            </div>
           </div>
         `;
 
