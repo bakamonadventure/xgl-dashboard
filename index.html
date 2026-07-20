@@ -4075,34 +4075,8 @@
         lbHtml += `</div></div>`;
 
         let athHtml = `<div class="card" style="border-top: 4px solid #ef4444;"><h3 style="margin-top:0; color: #fff;">${selectedDisc.title}</h3><div style="display: flex; flex-direction: column; gap: 12px; margin-top: 20px;">`;
-        
-        const getRankOrder = (val) => {
-          if (val === '100') return 1;
-          if (val === '80') return 2;
-          if (val === '60') return 3;
-          if (val === '40') return 4;
-          if (val === '30') return 5;
-          if (val === '20') return 6;
-          if (val === '7th') return 7;
-          if (val === '8th') return 8;
-          if (val === '9th') return 9;
-          if (val === '10th') return 10;
-          if (val === '11th') return 11;
-          if (val === '12th') return 12;
-          if (val === '-1') return 998;
-          return 999;
-        };
 
-        const sortedAthletes = [...selectedDisc.athletes].sort((a, b) => {
-          const rankA = window.liveTrackerState.ranks[a.name]?.rank || '0';
-          const rankB = window.liveTrackerState.ranks[b.name]?.rank || '0';
-          const orderA = getRankOrder(rankA);
-          const orderB = getRankOrder(rankB);
-          if (orderA !== orderB) return orderA - orderB;
-          return selectedDisc.athletes.indexOf(a) - selectedDisc.athletes.indexOf(b);
-        });
-
-        sortedAthletes.forEach(ath => {
+        selectedDisc.athletes.forEach(ath => {
            const tPalette = ath.team ? getTeamPalette(ath.team) : { primary: 'rgba(255,255,255,0.15)' };
            const tContrast = ath.team ? (tPalette.text || getContrastColor(tPalette.primary)) : '#cbd5e1';
            const badgeLabel = ath.team || 'IND';
@@ -4116,6 +4090,7 @@
                 <div style="display: flex; align-items: center; gap: 12px; flex-grow: 1; overflow: hidden;">
                   <span class="sim-athlete-badge" style="background: ${tPalette.primary}; color: ${tContrast}; padding: 4px 12px; font-size: 0.9rem;">${badgeLabel}</span>
                   <strong style="color: #fff; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${ath.name}</strong>
+                </div>
                 <div style="display: flex; align-items: center; gap: 12px;">
                   <div style="display: flex; flex-direction: column; gap: 4px;">
                     <button onclick="window.ltBumpRank('${safeName}', '${safeTeam}', -1)" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); color: #fff; cursor: pointer; padding: 2px 10px; border-radius: 4px; font-size: 0.8rem; line-height: 1;">▲</button>
