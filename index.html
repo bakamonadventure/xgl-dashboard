@@ -3951,6 +3951,43 @@
         renderLiveTrackerTab();
       };
 
+      window.ltBumpRank = function(athName, team, direction) {
+        const rankOrder = ['100', '80', '60', '40', '30', '20', '7th', '8th', '9th', '10th', '11th', '12th'];
+        const currentRank = window.liveTrackerState.ranks[athName]?.rank || '0';
+        
+        let newRank = '';
+        if (currentRank === '0' || currentRank === '-1') {
+          if (direction === -1) { // UP from unranked
+            newRank = '12th';
+          } else {
+            return; // Cannot go down from unranked
+          }
+        } else {
+          let idx = rankOrder.indexOf(currentRank);
+          if (direction === -1 && idx > 0) {
+            newRank = rankOrder[idx - 1];
+          } else if (direction === 1 && idx < rankOrder.length - 1) {
+            newRank = rankOrder[idx + 1];
+          } else if (direction === 1 && idx === rankOrder.length - 1) {
+            newRank = '0'; // Go down from 12th to unranked
+          } else {
+            return;
+          }
+        }
+
+        if (newRank !== '0' && newRank !== '-1') {
+          // Swap if occupied
+          const otherAth = Object.keys(window.liveTrackerState.ranks).find(k => window.liveTrackerState.ranks[k].rank === newRank);
+          if (otherAth) {
+            window.liveTrackerState.ranks[otherAth].rank = currentRank;
+          }
+        }
+        
+        window.liveTrackerState.ranks[athName] = { team: team, rank: newRank };
+        localStorage.setItem('xgl_liveTrackerState', JSON.stringify(window.liveTrackerState));
+        renderLiveTrackerTab();
+      };
+
       function renderLiveTrackerTab() {
         try {
           detailStatus.innerHTML = `${window.t('status')} <span>Live Mode</span>`;
@@ -4079,8 +4116,12 @@
                 <div style="display: flex; align-items: center; gap: 12px; flex-grow: 1; overflow: hidden;">
                   <span class="sim-athlete-badge" style="background: ${tPalette.primary}; color: ${tContrast}; padding: 4px 12px; font-size: 0.9rem;">${badgeLabel}</span>
                   <strong style="color: #fff; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${ath.name}</strong>
-                </div>
-                <select class="sim-select" style="padding: 10px; font-size: 1rem; border-radius: 6px; width: 120px;" onchange="window.ltUpdateRank('${safeName}', '${safeTeam}', this.value)">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <button onclick="window.ltBumpRank('${safeName}', '${safeTeam}', -1)" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); color: #fff; cursor: pointer; padding: 2px 10px; border-radius: 4px; font-size: 0.8rem; line-height: 1;">▲</button>
+                    <button onclick="window.ltBumpRank('${safeName}', '${safeTeam}', 1)" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); color: #fff; cursor: pointer; padding: 2px 10px; border-radius: 4px; font-size: 0.8rem; line-height: 1;">▼</button>
+                  </div>
+                  <select class="sim-select" style="padding: 10px; font-size: 1rem; border-radius: 6px; width: 120px;" onchange="window.ltUpdateRank('${safeName}', '${safeTeam}', this.value)">
                   <option value="0" ${r === '0' ? 'selected' : ''}>--</option>
                   <option value="100" ${r === '100' ? 'selected' : ''}>1st</option>
                   <option value="80" ${r === '80' ? 'selected' : ''}>2nd</option>
@@ -4096,6 +4137,7 @@
                   <option value="12th" ${r === '12th' ? 'selected' : ''}>12th</option>
                   <option value="-1" ${r === '-1' ? 'selected' : ''}>Absent</option>
                 </select>
+                </div>
              </div>
            `;
         });
