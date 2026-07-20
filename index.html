@@ -3996,21 +3996,21 @@
         }
 
         const livePoints = { 'TKO': 0, 'NY': 0, 'LA': 0, 'SP': 0 };
-        const ptsMap = { '100': 100, '80': 80, '60': 60, '40': 40, '30': 30, '20': 20 };
+        const ptsMap = { '100': 100, '80': 80, '60': 60, '40': 40, '30': 30, '20': 20, '7th': 0, '8th': 0, '9th': 0, '10th': 0, '11th': 0, '12th': 0, '-1': 0 };
         
         Object.values(window.liveTrackerState.ranks).forEach(r => {
           let tName = String(r.team).trim().toUpperCase();
           if (tName === 'TOK' || tName === 'TK') tName = 'TKO';
-          if (livePoints[tName] !== undefined && ptsMap[r.rank]) {
+          if (livePoints[tName] !== undefined && ptsMap[r.rank] !== undefined) {
             livePoints[tName] += ptsMap[r.rank];
           }
         });
 
         const finalScores = [
-          { team: 'TKO', score: basePoints['TKO'] + livePoints['TKO'], live: livePoints['TKO'] },
-          { team: 'NY', score: basePoints['NY'] + livePoints['NY'], live: livePoints['NY'] },
-          { team: 'LA', score: basePoints['LA'] + livePoints['LA'], live: livePoints['LA'] },
-          { team: 'SP', score: basePoints['SP'] + livePoints['SP'], live: livePoints['SP'] }
+          { team: 'TKO', score: basePoints['TKO'] + livePoints['TKO'], live: livePoints['TKO'], base: basePoints['TKO'] },
+          { team: 'NY', score: basePoints['NY'] + livePoints['NY'], live: livePoints['NY'], base: basePoints['NY'] },
+          { team: 'LA', score: basePoints['LA'] + livePoints['LA'], live: livePoints['LA'], base: basePoints['LA'] },
+          { team: 'SP', score: basePoints['SP'] + livePoints['SP'], live: livePoints['SP'], base: basePoints['SP'] }
         ].sort((a,b) => b.score - a.score);
 
         let lbHtml = `<div class="card" style="background: linear-gradient(180deg, rgba(30,41,59,0.7), rgba(0,0,0,0.5)); border: 1px solid rgba(255,255,255,0.1);">
@@ -4026,7 +4026,10 @@
                 <span style="font-size: 1.2rem; font-weight: bold; color: #fff;">${f.team}</span>
               </div>
               <div style="display: flex; align-items: center; gap: 16px;">
-                <span style="color: #a855f7; font-weight: bold; font-size: 1.1rem;">${f.live > 0 ? '+'+f.live : ''}</span>
+                <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center;">
+                  <span style="font-size: 0.8rem; color: #94a3b8;">${window.t('base') || 'Base:'} ${f.base}</span>
+                  <span style="color: #a855f7; font-weight: bold; font-size: 1.1rem; line-height: 1;">${f.live > 0 ? '+'+f.live : ''}</span>
+                </div>
                 <span style="font-size: 1.5rem; font-weight: bold; color: ${p.primary};">${f.score}</span>
               </div>
             </div>
@@ -4058,6 +4061,13 @@
                   <option value="40" ${r === '40' ? 'selected' : ''}>4th</option>
                   <option value="30" ${r === '30' ? 'selected' : ''}>5th</option>
                   <option value="20" ${r === '20' ? 'selected' : ''}>6th</option>
+                  <option value="7th" ${r === '7th' ? 'selected' : ''}>7th</option>
+                  <option value="8th" ${r === '8th' ? 'selected' : ''}>8th</option>
+                  <option value="9th" ${r === '9th' ? 'selected' : ''}>9th</option>
+                  <option value="10th" ${r === '10th' ? 'selected' : ''}>10th</option>
+                  <option value="11th" ${r === '11th' ? 'selected' : ''}>11th</option>
+                  <option value="12th" ${r === '12th' ? 'selected' : ''}>12th</option>
+                  <option value="-1" ${r === '-1' ? 'selected' : ''}>Absent</option>
                 </select>
              </div>
            `;
