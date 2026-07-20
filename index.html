@@ -3910,6 +3910,63 @@
       }
 
 
+      window.applyRankShift = function(ranksObj, oldRank, newRank, athleteKey, isSim) {
+        if (newRank === '0' || newRank === '-1') return;
+        const rankOrder = ['100', '80', '60', '40', '30', '20', '7th', '8th', '9th', '10th', '11th', '12th'];
+        const newIdx = rankOrder.indexOf(newRank);
+        const oldIdx = oldRank === '0' || oldRank === '-1' ? 999 : rankOrder.indexOf(oldRank);
+        if (newIdx === oldIdx) return;
+        
+        const rankMap = {};
+        for (const [k, v] of Object.entries(ranksObj)) {
+          if (k !== athleteKey && rankOrder.includes(v.rank)) {
+            if (isSim) {
+              const eventPrefix = athleteKey.split('::')[0] + '::';
+              if (!k.startsWith(eventPrefix)) continue;
+            }
+            rankMap[v.rank] = k;
+          }
+        }
+        
+        const updateRank = (key, rank) => {
+          ranksObj[key].rank = rank;
+          if (isSim) {
+             let pts = 0;
+             if (rank === '100') pts = 100;
+             if (rank === '80') pts = 80;
+             if (rank === '60') pts = 60;
+             if (rank === '40') pts = 40;
+             if (rank === '30') pts = 30;
+             if (rank === '20') pts = 20;
+             if (rank === '-1') pts = -1;
+             ranksObj[key].points = pts;
+          }
+        };
+
+        if (oldIdx > newIdx) {
+          const limit = Math.min(oldIdx - 1, rankOrder.length - 2);
+          for (let i = limit; i >= newIdx; i--) {
+            const currentRank = rankOrder[i];
+            const nextRank = rankOrder[i + 1];
+            if (rankMap[currentRank]) {
+              updateRank(rankMap[currentRank], nextRank);
+              rankMap[nextRank] = rankMap[currentRank];
+              delete rankMap[currentRank];
+            }
+          }
+        } else {
+          for (let i = oldIdx + 1; i <= newIdx; i++) {
+            const currentRank = rankOrder[i];
+            const prevRank = rankOrder[i - 1];
+            if (rankMap[currentRank]) {
+              updateRank(rankMap[currentRank], prevRank);
+              rankMap[prevRank] = rankMap[currentRank];
+              delete rankMap[currentRank];
+            }
+          }
+        }
+      };
+
       window.updateSim = function (key, team, rankStr) {
         const currentSim = window.simState[key];
         const currentRank = currentSim ? currentSim.rank : '0';
@@ -3926,16 +3983,7 @@
         };
 
         if (rankStr !== '0' && rankStr !== '-1') {
-          const eventPrefix = key.split('::')[0] + '::';
-          const otherKey = Object.keys(window.simState).find(k => k !== key && k.startsWith(eventPrefix) && window.simState[k].rank === rankStr);
-          if (otherKey) {
-            if (currentRank === '0') {
-              delete window.simState[otherKey];
-            } else {
-              window.simState[otherKey].rank = currentRank;
-              window.simState[otherKey].points = getPts(currentRank);
-            }
-          }
+          window.applyRankShift(window.simState, currentRank, rankStr, key, true);
         }
 
         if (rankStr === '0') {
@@ -3967,14 +4015,7 @@
         const currentRank = window.liveTrackerState.ranks[athName]?.rank || '0';
         
         if (val !== '0' && val !== '-1') {
-          const otherAth = Object.keys(window.liveTrackerState.ranks).find(k => k !== athName && window.liveTrackerState.ranks[k].rank === val);
-          if (otherAth) {
-            if (currentRank === '0') {
-              delete window.liveTrackerState.ranks[otherAth];
-            } else {
-              window.liveTrackerState.ranks[otherAth].rank = currentRank;
-            }
-          }
+          window.applyRankShift(window.liveTrackerState.ranks, currentRank, val, athName, false);
         }
 
         if (val === '0') {
@@ -4011,11 +4052,7 @@
         }
 
         if (newRank !== '0' && newRank !== '-1') {
-          // Swap if occupied
-          const otherAth = Object.keys(window.liveTrackerState.ranks).find(k => window.liveTrackerState.ranks[k].rank === newRank);
-          if (otherAth) {
-            window.liveTrackerState.ranks[otherAth].rank = currentRank;
-          }
+          window.applyRankShift(window.liveTrackerState.ranks, currentRank, newRank, athName, false);
         }
         
         window.liveTrackerState.ranks[athName] = { team: team, rank: newRank };
