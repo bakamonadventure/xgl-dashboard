@@ -3109,6 +3109,12 @@
             if (title.includes('Men SKB') && title.toLowerCase().includes('drafted athlete')) {
               title = 'Men SKB ST';
             }
+
+            // Exclude Qualifiers / Eliminations
+            if (/elimination|qualifier|qual|予選/i.test(title)) {
+              continue;
+            }
+
             const athletes = [];
 
             let aCol = c;
