@@ -3159,6 +3159,43 @@
           }
         }
       }
+
+      const scheduleMap = [
+        { day: 'Friday',   key: 'bmx street' },
+        { day: 'Friday',   key: 'women skb park' },
+        { day: 'Friday',   key: 'scooter park best trick spotlight event' },
+        { day: 'Friday',   key: 'best whip (no emoto)' },
+        { day: 'Friday',   key: "bmx men's bmx park" },
+        { day: 'Saturday', key: 'women skb vert bt' },
+        { day: 'Saturday', key: 'men skb st' },
+        { day: 'Saturday', key: 'men skb vert' },
+        { day: 'Saturday', key: "women's bmx park" },
+        { day: 'Saturday', key: 'men skb stbt' },
+        { day: 'Saturday', key: 'bmx dirt' },
+        { day: 'Saturday', key: 'best trick (emoto ok)' },
+        { day: 'Saturday', key: 'men skb park best trick spotlight event' },
+        { day: 'Sunday',   key: 'men skb vert bt' },
+        { day: 'Sunday',   key: 'bmx park best trick' },
+        { day: 'Sunday',   key: 'women skb st' },
+        { day: 'Sunday',   key: 'men skb park' },
+        { day: 'Sunday',   key: 'women skb vert' },
+        { day: 'Sunday',   key: 'women skb stbt' },
+        { day: 'Sunday',   key: 'bmx dirt best trick' }
+      ];
+
+      disciplines.forEach(disc => {
+        let cleanTitle = disc.title.replace(/\s+/g, ' ').trim().toLowerCase();
+        const match = scheduleMap.findIndex(s => cleanTitle === s.key);
+        if (match !== -1) {
+          disc._orderIndex = match;
+          disc._day = scheduleMap[match].day;
+        } else {
+          disc._orderIndex = 999;
+          disc._day = 'Other';
+        }
+      });
+      disciplines.sort((a, b) => a._orderIndex - b._orderIndex);
+
       return disciplines;
     }
 
@@ -3680,16 +3717,13 @@
             <div class="sim-race-row">
               <div class="sim-race-team">${team.name}</div>
               <div class="sim-race-bar-wrapper">
-                <!-- Base Points Bar -->
                 <div class="sim-race-bar-base" style="background: ${palette.primary}; width: ${basePct}%; z-index: 2;">
                   <span style="color: ${palette.text || getContrastColor(palette.primary)}; opacity: ${basePct > 5 ? 1 : 0}">${team.base.toLocaleString()}</span>
                 </div>
-                <!-- Simulated Points Bar (Striped) -->
                 <div class="sim-race-bar-sim" style="background: repeating-linear-gradient(45deg, ${palette.primary}cc, ${palette.primary}cc 10px, ${palette.primary}99 10px, ${palette.primary}99 20px); width: ${simPct}%; z-index: 1;">
                   ${team.sim > 0 ? `<div class="sim-race-bar-sim-label" style="color: ${palette.text || getContrastColor(palette.primary)};">+${team.sim.toLocaleString()}</div>` : ''}
                 </div>
               </div>
-              <!-- Absolute Total Label (Flexible, no overflow) -->
               <div class="sim-race-total">${team.total.toLocaleString()} pt</div>
             </div>
           `;
@@ -3728,48 +3762,8 @@
               <div id="mcResultsPanel" style="display: none; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 20px; margin-bottom: 24px;"></div>
         `;
 
-        const scheduleMap = [
-          { day: 'Friday', title: 'bmx street' },
-          { day: 'Friday', title: 'women skb park' },
-          { day: 'Friday', title: 'park best trick' },
-          { day: 'Friday', title: 'best whip (no emoto)' },
-          { day: 'Friday', title: "bmx men's bmx park" },
-          { day: 'Saturday', title: 'women skb vert bt' },
-          { day: 'Saturday', title: 'men skb st' },
-          { day: 'Saturday', title: 'men skb vert' },
-          { day: 'Saturday', title: "women's bmx park" },
-          { day: 'Saturday', title: 'men skb stbt' },
-          { day: 'Saturday', title: 'bmx dirt' },
-          { day: 'Saturday', title: 'best trick (emoto ok)' },
-          { day: 'Saturday', title: 'men skb park best trick' },
-          { day: 'Sunday', title: 'men skb vert bt' },
-          { day: 'Sunday', title: 'bmx park best trick' },
-          { day: 'Sunday', title: 'women skb st' },
-          { day: 'Sunday', title: 'men skb park' },
-          { day: 'Sunday', title: 'women skb vert' },
-          { day: 'Sunday', title: 'women skb stbt' },
-          { day: 'Sunday', title: 'bmx dirt best trick' }
-        ];
-
-        data.nolaAthletes.forEach(disc => {
-          let cleanTitle = disc.title.replace(/[=\-]/g, '').replace(/\d+/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
-          const match = scheduleMap.findIndex(s => cleanTitle === s.title);
-          if (match !== -1) {
-            disc._orderIndex = match;
-            disc._day = scheduleMap[match].day;
-          } else if (cleanTitle.includes('scooter')) {
-            disc._orderIndex = 4.5; // Put at the end of Friday
-            disc._day = 'Friday';
-          } else {
-            disc._orderIndex = 999;
-            disc._day = 'Other';
-          }
-        });
-
-        const sortedDisciplines = [...data.nolaAthletes].sort((a, b) => a._orderIndex - b._orderIndex);
-
         // Initialize discFilterState keys for new disciplines
-        sortedDisciplines.forEach(disc => {
+        data.nolaAthletes.forEach(disc => {
           if (window.discFilterState[disc.title] === undefined) {
             window.discFilterState[disc.title] = true;
           }
@@ -3785,7 +3779,7 @@
         `;
 
         ['Friday', 'Saturday', 'Sunday', 'Other'].forEach(day => {
-          const dayDiscs = sortedDisciplines.filter(d => d._day === day);
+          const dayDiscs = data.nolaAthletes.filter(d => d._day === day);
           if (dayDiscs.length === 0) return;
           const dayTranslation = window.appLang === 'ja'
             ? day.replace('Friday', '金曜日 (Day 1)').replace('Saturday', '土曜日 (Day 2)').replace('Sunday', '日曜日 (Day 3)')
@@ -3819,7 +3813,7 @@
         html += filterHtml;
 
         let currentDay = '';
-        sortedDisciplines.forEach((disc) => {
+        data.nolaAthletes.forEach((disc) => {
           if (!window.discFilterState[disc.title]) return; // Skip rendering if unchecked
 
           if (disc._day !== currentDay) {
