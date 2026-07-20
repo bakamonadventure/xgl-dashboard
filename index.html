@@ -3185,7 +3185,14 @@
         });
       }
 
-      if (!window.simState || (Object.values(window.simState)[0] && typeof Object.values(window.simState)[0] === 'number')) {
+      try {
+        const savedSimState = JSON.parse(localStorage.getItem('xgl_simState'));
+        if (savedSimState && Object.keys(savedSimState).length >= 0) {
+          window.simState = savedSimState;
+        } else {
+          window.simState = {};
+        }
+      } catch (e) {
         window.simState = {};
       }
       if (!window.discFilterState) {
@@ -3202,6 +3209,7 @@
 
       window.resetSim = function () {
         window.simState = {};
+        localStorage.removeItem('xgl_simState');
         renderContent();
       };
 
@@ -3311,6 +3319,7 @@
           });
         });
 
+        localStorage.setItem('xgl_simState', JSON.stringify(window.simState));
         renderContent();
         setTimeout(() => window.runMonteCarlo(), 100);
       };
@@ -3901,22 +3910,29 @@
 
           window.simState[key] = { team: team, points: pts, rank: rankStr };
         }
+        localStorage.setItem('xgl_simState', JSON.stringify(window.simState));
         renderContent();
       };
 
       renderContent();
     }
 
-      window.liveTrackerState = { selectedEvent: '', ranks: {} };
+      try {
+        window.liveTrackerState = JSON.parse(localStorage.getItem('xgl_liveTrackerState')) || { selectedEvent: '', ranks: {} };
+      } catch (e) {
+        window.liveTrackerState = { selectedEvent: '', ranks: {} };
+      }
 
       window.ltSelectEvent = function(val) {
         window.liveTrackerState.selectedEvent = val;
         window.liveTrackerState.ranks = {};
+        localStorage.setItem('xgl_liveTrackerState', JSON.stringify(window.liveTrackerState));
         renderLiveTrackerTab();
       };
 
       window.ltUpdateRank = function(athName, team, val) {
         window.liveTrackerState.ranks[athName] = { team: team, rank: val };
+        localStorage.setItem('xgl_liveTrackerState', JSON.stringify(window.liveTrackerState));
         renderLiveTrackerTab();
       };
 
