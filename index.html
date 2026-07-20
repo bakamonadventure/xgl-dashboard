@@ -3817,19 +3817,24 @@
         `;
         html += filterHtml;
 
+        let simHtml = '';
         let currentDay = '';
         data.nolaAthletes.forEach((disc) => {
           if (!window.discFilterState[disc.title]) return; // Skip rendering if unchecked
 
           if (disc._day !== currentDay) {
+            if (currentDay !== '') {
+              simHtml += `</div>`; // Close previous grid
+            }
             currentDay = disc._day;
             const dayTranslation = window.appLang === 'ja'
               ? currentDay.replace('Friday', '金曜日 (Day 1)').replace('Saturday', '土曜日 (Day 2)').replace('Sunday', '日曜日 (Day 3)')
               : currentDay;
-            html += `<div class="sim-day-header">
+            simHtml += `<div class="sim-day-header">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
               ${dayTranslation}
             </div>`;
+            simHtml += `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; margin-bottom: 32px;">`;
           }
 
           const teamCounts = { 'TKO': 0, 'NY': 0, 'LA': 0, 'SP': 0 };
@@ -3849,7 +3854,7 @@
             }
           });
 
-          html += `<div style="margin-bottom: 24px;">
+          simHtml += `<div style="margin-bottom: 24px; position: relative;">
             <div class="sim-disc-header">
               <h3 class="sim-disc-title">${disc.title}</h3>
               ${maxPotentialHtml}
@@ -3867,7 +3872,7 @@
             const tContrast = ath.team ? ((tPalette.text || getContrastColor(tPalette.primary))) : '#cbd5e1';
             const badgeLabel = ath.team || 'IND';
 
-            html += `
+            simHtml += `
               <div class="sim-row">
                 <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                   <span class="sim-athlete-badge" style="background: ${tPalette.primary}; color: ${tContrast};">${badgeLabel}</span>
@@ -3892,9 +3897,14 @@
               </div>
             `;
           });
-          html += `</div>`;
+          simHtml += `</div>`;
         });
 
+        if (currentDay !== '') {
+          simHtml += `</div>`; // Close final grid
+        }
+
+        html += simHtml;
         html += `</div></div>`;
         tableContainer.innerHTML = html;
       }
