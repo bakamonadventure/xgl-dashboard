@@ -1825,6 +1825,7 @@
         '11th': '11th (0pt)',
         '12th': '12th (0pt)',
         'absent': 'Absent (0pt)',
+        'eliminated': 'Eliminated (DNQ)',
         'runSimBtn': 'Run 10,000 Simulations',
         'mcRunning': 'Running 10,000 Monte Carlo Simulations...',
         'predictTooltip': 'Predicts a single, deterministic outcome based on past averages. Since it locks in all ranks, running Monte Carlo afterward will result in a 100% fixed outcome.',
@@ -1936,6 +1937,7 @@
         '11th': '11th (0pt)',
         '12th': '12th (0pt)',
         'absent': '欠場 (0pt)',
+        'eliminated': '予選敗退 (DNQ)',
         'runSimBtn': '1万回 勝率シミュレーション実行',
         'mcRunning': '1万回のモンテカルロ・シミュレーションを実行中...',
         'predictTooltip': '過去の平均実績から「最もあり得る1つの確定シナリオ」を全選手に割り当てます。※すべての順位が確定するため、この後に勝率シミュレーションを実行するとランダム要素がなくなり、常に100%になります。',
@@ -3357,7 +3359,7 @@
             const ptIdx = RANK_STRS.indexOf(rankStr);
             if (ptIdx >= 0 && ptIdx < POINT_VALUES.length) {
               pts = POINT_VALUES[ptIdx];
-            } else if (rankStr === '-1') {
+            } else if (rankStr === '-1' || rankStr === '-2') {
               pts = -1;
             }
 
@@ -3891,6 +3893,7 @@
                   <option value="11th" ${currentRank === '11th' ? 'selected' : ''}>${window.t('11th')}</option>
                   <option value="12th" ${currentRank === '12th' ? 'selected' : ''}>${window.t('12th')}</option>
                   <option value="-1" ${currentRank === '-1' ? 'selected' : ''}>${window.t('absent')}</option>
+                  <option value="-2" ${currentRank === '-2' ? 'selected' : ''}>${window.t('eliminated')}</option>
                 </select>
               </div>
             `;
@@ -4193,7 +4196,8 @@
                   <option value="10th" ${r === '10th' ? 'selected' : ''}>10th</option>
                   <option value="11th" ${r === '11th' ? 'selected' : ''}>11th</option>
                   <option value="12th" ${r === '12th' ? 'selected' : ''}>12th</option>
-                  <option value="-1" ${r === '-1' ? 'selected' : ''}>Absent</option>
+                  <option value="-1" ${r === '-1' ? 'selected' : ''}>${window.t('absent')}</option>
+                  <option value="-2" ${r === '-2' ? 'selected' : ''}>${window.t('eliminated')}</option>
                 </select>
                 </div>
              </div>
@@ -4655,7 +4659,7 @@
         const target = sheetName || window.seState.targetSheet || 'NOLA';
         const gid = ATHLETE_SHEET_GIDS[target];
         if (!gid) return;
-        const url = `https://docs.google.com/spreadsheets/d/1LXwL7-99AbQ0sKilL-PPTjgPzFNlzEj4_4QyzoYcOH4/gviz/tq?tqx=out:csv&gid=${gid}`;
+        const url = `https://docs.google.com/spreadsheets/d/1LXwL7-99AbQ0sKilL-PPTjgPzFNlzEj4_4QyzoYcOH4/gviz/tq?tqx=out:csv&gid=${gid}&_=${new Date().getTime()}`;
         const res = await fetch(url, { cache: 'no-store' });
         if (!res.ok) return;
         const csvText = await res.text();
@@ -4698,7 +4702,15 @@
                 const val = rows[i][c];
                 const teamVal = rows[i][c + 1] ? rows[i][c + 1].trim() : '';
                 if (!val || val.trim() === '' || val === '#REF!') continue;
-                if (val.toLowerCase().includes('declined') || val.toLowerCase().includes('alternate')) break;
+                
+                // Allow 'x' in number column if it happens to parse, but rely on 'eliminated' in athlete name
+                if (c > 0 && rows[i][c - 1] !== undefined) {
+                  const numVal = rows[i][c - 1].toString().trim().toLowerCase();
+                  if (numVal === 'x') continue;
+                }
+
+                const lowerVal = val.toLowerCase();
+                if (lowerVal.includes('declined') || lowerVal.includes('alternate')) continue;
                 if (mapHeaderToEvKey(val)) break;
                 
                 if (isNaN(val)) {
@@ -4778,7 +4790,7 @@
           let tName = String(sim.team).trim().toUpperCase();
           if (tName === 'TOK' || tName === 'TK' || tName === 'TOKYO') tName = 'TKO';
 
-          if (sim.points === -1 || String(sim.rank) === '-1') {
+          if (sim.points === -1 || String(sim.rank) === '-1' || String(sim.rank) === '-2') {
             optAthletes.add(name);
           } else if (sim.points > 0 && !sim._predicted) {
             currentStateStr += `- ${name} (${tName}): ${sim.points}pt\n`;
