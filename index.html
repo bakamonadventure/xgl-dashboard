@@ -2495,6 +2495,14 @@
         return;
       }
 
+      if (active.key === 'Athlete') {
+        const allStats = getAthleteStats();
+        data.clubs.forEach(club => {
+          const clubAthletes = allStats.filter(a => a.club === club.name).map(a => a.name);
+          club.athletes = [...new Set(clubAthletes)];
+        });
+      }
+
       const clubsWithScore = data.clubs.filter(c => c.score !== null && c.score !== undefined);
       if (clubsWithScore.length > 0) {
         const sorted = [...clubsWithScore].sort((a, b) => b.score - a.score);
