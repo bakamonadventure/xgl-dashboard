@@ -2155,7 +2155,7 @@
     };
 
     function getTeamPalette(teamName) {
-      if (!teamName) return { primary: '#d2ff28' };
+      if (!teamName) return { primary: '#6b7280', text: '#ffffff' };
       const key = String(teamName).trim().toUpperCase();
       if (teamPalettes[key]) return teamPalettes[key];
       // fuzzy matches for common variants
@@ -2163,7 +2163,7 @@
       if (key.startsWith('NY') || key.includes('NEW')) return teamPalettes.NY || { primary: '#fbff00' };
       if (key.startsWith('LA')) return teamPalettes.LA || { primary: '#ff007b' };
       if (key.startsWith('SP')) return teamPalettes.SP || { primary: '#d2ff28' };
-      return { primary: '#d2ff28' };
+      return { primary: '#6b7280', text: '#ffffff' };
     }
 
     function hexToLuminance(hex) {
@@ -2730,7 +2730,7 @@
                    if (athleteName.length < 3 || athleteName.length > 40) continue;
 
                    const team = (c + 1 < row.length && row[c+1]) ? String(row[c+1]).trim() : '';
-                   const canonicalClub = isClubNameToken(team) ? getCanonicalClub(team) : 'Free Agent';
+                   const canonicalClub = isClubNameToken(team) ? getCanonicalClub(team) : 'FA';
 
                    const nameKey = athleteName.toLowerCase();
                    const compositeKey = nameKey + '_' + canonicalClub;
@@ -2776,7 +2776,7 @@
       allPlacements.forEach(p => {
         const nameKey = p.athleteName.trim().toLowerCase();
         const teamForEvent = getAthleteTeamForEvent(p.athleteName, p.sheetKey);
-        const canonicalClub = teamForEvent ? getCanonicalClub(teamForEvent) : 'Free Agent';
+        const canonicalClub = teamForEvent ? getCanonicalClub(teamForEvent) : 'FA';
         const compositeKey = nameKey + '_' + canonicalClub;
 
         if (!placementsByComposite[compositeKey]) {
@@ -2840,7 +2840,7 @@
           points: pointsByEvent,
           totalPoints,
           placements,
-          palette: info.palette || (info.club !== 'Free Agent' ? getTeamPalette(info.club) : { primary: '#6b7280', text: '#ffffff' })
+          palette: info.palette || (info.club !== 'FA' ? getTeamPalette(info.club) : { primary: '#6b7280', text: '#ffffff' })
         });
       });
 
@@ -2884,7 +2884,7 @@
         <option value="NY">NY</option>
         <option value="LA">LA</option>
         <option value="SP">SP</option>
-        <option value="Free Agent">Free Agent</option>
+        <option value="FA">FA</option>
       `;
       clubSelect.addEventListener('change', () => updateAthleteLeaderboard());
       filtersDiv.appendChild(clubSelect);
