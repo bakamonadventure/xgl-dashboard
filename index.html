@@ -2788,7 +2788,7 @@
           athleteClubMap.set(compositeKey, {
             name: p.athleteName.trim(),
             club: canonicalClub,
-            palette: teamForEvent ? getTeamPalette(teamForEvent) : { primary: '#64748b', text: '#ffffff' },
+            palette: teamForEvent ? getTeamPalette(teamForEvent) : { primary: '#6b7280', text: '#ffffff' },
             disciplines: new Set(),
             inferredSport: null,
             inferredGender: null
@@ -2840,7 +2840,7 @@
           points: pointsByEvent,
           totalPoints,
           placements,
-          palette: info.palette || (info.club !== 'Free Agent' ? getTeamPalette(info.club) : { primary: '#64748b', text: '#ffffff' })
+          palette: info.palette || (info.club !== 'Free Agent' ? getTeamPalette(info.club) : { primary: '#6b7280', text: '#ffffff' })
         });
       });
 
@@ -3018,6 +3018,7 @@
         badge.style.borderRadius = '10px';
         badge.style.fontSize = '0.78rem';
         badge.style.fontWeight = '800';
+        badge.style.whiteSpace = 'nowrap';
         clubTd.appendChild(badge);
         tr.appendChild(clubTd);
 
