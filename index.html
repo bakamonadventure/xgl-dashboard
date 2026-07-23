@@ -2713,16 +2713,27 @@
              for (let c = 0; c < row.length - 1; c++) {
                 if (row[c] && typeof row[c] === 'string' && row[c].trim() !== '') {
                    const team = row[c+1] ? String(row[c+1]).trim() : '';
-                   // Only pick up if it's a team token, or if it explicitly says Free Agent (we'll capture actual free agents via placements or here if they are blank but listed)
-                   const canonicalClub = isClubNameToken(team) ? getCanonicalClub(team) : 'Free Agent';
+                   
+                   // Only pick up if it's a valid team token. Free agents with points will be added via placements logic.
+                   if (!isClubNameToken(team)) {
+                     continue;
+                   }
+
+                   const canonicalClub = getCanonicalClub(team);
                    const athleteName = row[c].trim();
+                   
+                   // Filter out common header strings that might accidentally have a token next to them
+                   if (athleteName.toLowerCase().includes('x games') || athleteName.toLowerCase().includes('athlete list') || athleteName.toLowerCase().includes('best trick')) {
+                     continue;
+                   }
+
                    const nameKey = athleteName.toLowerCase();
                    const compositeKey = nameKey + '_' + canonicalClub;
                    if (!athleteClubMap.has(compositeKey)) {
                       athleteClubMap.set(compositeKey, { 
                         name: athleteName, 
                         club: canonicalClub, 
-                        palette: isClubNameToken(team) ? getTeamPalette(team) : { primary: '#64748b', text: '#ffffff' } 
+                        palette: getTeamPalette(team)
                       });
                    }
                 }
