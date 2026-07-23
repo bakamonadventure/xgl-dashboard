@@ -2698,7 +2698,18 @@
         }
       });
 
-      const athleteClubMap = new Map(); // compositeKey -> { name, club, palette }
+      const athleteClubMap = new Map(); // compositeKey -> { name, club, palette, disciplines }
+
+      function extractDisciplines(str) {
+        const d = [];
+        const s = String(str).toLowerCase();
+        if (s.includes('street') || s.match(/\bst\b/)) d.push('Street');
+        if (s.includes('park')) d.push('Park');
+        if (s.includes('dirt')) d.push('Dirt');
+        if (s.includes('vert')) d.push('Vert');
+        if (s.includes('best trick') || s.match(/\bstbt\b/) || s.match(/\bbt\b/) || s.includes('trick')) d.push('Best Trick');
+        return d;
+      }
 
       // 1. Add athletes from the main Athlete sheet
       if (athleteData && athleteData.clubs) {
@@ -2707,7 +2718,7 @@
           club.athletes.forEach(athleteName => {
             const nameKey = athleteName.trim().toLowerCase();
             const compositeKey = nameKey + '_' + canonicalClub;
-            athleteClubMap.set(compositeKey, { name: athleteName, club: canonicalClub, palette: club.palette });
+            athleteClubMap.set(compositeKey, { name: athleteName, club: canonicalClub, palette: club.palette, disciplines: new Set() });
           });
         });
       }
@@ -2737,12 +2748,29 @@
 
                    const nameKey = athleteName.toLowerCase();
                    const compositeKey = nameKey + '_' + canonicalClub;
+                   
                    if (!athleteClubMap.has(compositeKey)) {
                       athleteClubMap.set(compositeKey, { 
                         name: athleteName, 
                         club: canonicalClub, 
-                        palette: getTeamPalette(team)
+                        palette: getTeamPalette(team),
+                        disciplines: new Set()
                       });
+                   }
+                   
+                   // Attempt to find the event header for this column to extract disciplines
+                   let headerStr = '';
+                   for (let rScan = r - 1; rScan >= 0; rScan--) {
+                     const cell = athleteSheet.rawRows[rScan][c];
+                     if (cell && typeof cell === 'string' && cell.trim().length > 2) {
+                       if (cell.toLowerCase().match(/\b(skb|bmx|park|street|dirt|vert|trick|st|stbt|bt)\b/i)) {
+                          headerStr = cell;
+                          break;
+                       }
+                     }
+                   }
+                   if (headerStr) {
+                     extractDisciplines(headerStr).forEach(d => athleteClubMap.get(compositeKey).disciplines.add(d));
                    }
                 }
              }
@@ -2766,8 +2794,14 @@
           athleteClubMap.set(compositeKey, {
             name: p.athleteName.trim(),
             club: canonicalClub,
-            palette: teamForEvent ? getTeamPalette(teamForEvent) : { primary: '#64748b', text: '#ffffff' }
+            palette: teamForEvent ? getTeamPalette(teamForEvent) : { primary: '#64748b', text: '#ffffff' },
+            disciplines: new Set()
           });
+        }
+        
+        // Add discipline from placement
+        if (p.eventName) {
+           athleteClubMap.get(compositeKey).disciplines.add(p.eventName);
         }
       });
 
@@ -2786,6 +2820,11 @@
           gender = placements[0].gender;
         }
 
+        // Add default disciplines if empty, using sport
+        if (info.disciplines.size === 0 && sport) {
+           info.disciplines.add(sport); 
+        }
+
         const pointsByEvent = { SAC: 0, CHIBA: 0, NOLA: 0 };
         placements.forEach(p => {
            pointsByEvent[p.sheetKey] += p.points;
@@ -2798,6 +2837,7 @@
           club: info.club,
           sport,
           gender,
+          disciplines: Array.from(info.disciplines),
           points: pointsByEvent,
           totalPoints,
           placements,
@@ -2850,15 +2890,20 @@
       clubSelect.addEventListener('change', () => updateAthleteLeaderboard());
       filtersDiv.appendChild(clubSelect);
 
-      // Sport filter
+      // Discipline filter
       const sportSelect = document.createElement('select');
       sportSelect.id = 'athleteSportFilter';
-      sportSelect.ariaLabel = 'Filter by Sport';
+      sportSelect.ariaLabel = 'Filter by Discipline';
       sportSelect.style.boxShadow = '0 8px 20px rgba(15, 23, 42, 0.05)';
       sportSelect.innerHTML = `
-        <option value="">${window.t('allSports')}</option>
-        <option value="Skateboard">Skateboard</option>
-        <option value="BMX">BMX</option>
+        <option value="">All Disciplines</option>
+        <option value="Skateboard">Skateboard (All)</option>
+        <option value="Street">Street</option>
+        <option value="Park">Park</option>
+        <option value="Vert">Vert</option>
+        <option value="Dirt">Dirt</option>
+        <option value="Best Trick">Best Trick</option>
+        <option value="BMX">BMX (All)</option>
       `;
       sportSelect.addEventListener('change', () => updateAthleteLeaderboard());
       filtersDiv.appendChild(sportSelect);
@@ -2902,7 +2947,13 @@
       const filtered = athletes.filter(ath => {
         if (searchVal && !ath.name.toLowerCase().includes(searchVal)) return false;
         if (clubVal && ath.club !== clubVal) return false;
-        if (sportVal && ath.sport !== sportVal) return false;
+        if (sportVal) {
+          if (sportVal === 'Skateboard' || sportVal === 'BMX') {
+             if (ath.sport !== sportVal) return false;
+          } else {
+             if (!ath.disciplines.some(d => d.includes(sportVal))) return false;
+          }
+        }
         if (genderVal && ath.gender !== genderVal) return false;
         return true;
       });
@@ -2962,7 +3013,7 @@
 
         // Sport / Gender
         const discTd = document.createElement('td');
-        discTd.textContent = `${ath.sport} (${ath.gender})`;
+        discTd.innerHTML = `${ath.sport} (${ath.gender})<br><span style="font-size: 0.8em; opacity: 0.8">${ath.disciplines.join(', ')}</span>`;
         discTd.style.color = '#cbd5e1';
         tr.appendChild(discTd);
 
