@@ -2465,6 +2465,7 @@
       const scoreLabel = club.score !== null && club.score !== undefined ? club.score.toLocaleString('ja-JP') : '—';
       const attendanceLabel = club.metrics?.Attendance != null ? club.metrics.Attendance.toLocaleString('ja-JP') : '—';
       const maxPointsLabel = club.metrics?.['MAX POINTS'] != null ? club.metrics['MAX POINTS'].toLocaleString('ja-JP') : '—';
+      const medals = club.medalsHtml ? ` <br><div style="margin-top: 4px;">Medals: ${club.medalsHtml}</div>` : '';
       return `
         <div class="card" style="background:${palette.primary}; color:${contrast}; border: none;">
           ${headerHtml}
@@ -2474,7 +2475,7 @@
               <div class="hero-subtext" style="color:${contrast}; opacity:0.9">Current score</div>
             </div>
           </div>
-          <div class="card-aux" style="color:${contrast}; border-top:1px solid rgba(255,255,255,0.12)">Attendance: <strong style="color:${contrast}">${attendanceLabel}</strong> / MAX POINTS: <strong style="color:${contrast}">${maxPointsLabel}</strong></div>
+          <div class="card-aux" style="color:${contrast}; border-top:1px solid rgba(255,255,255,0.12)">Attendance: <strong style="color:${contrast}">${attendanceLabel}</strong> / MAX POINTS: <strong style="color:${contrast}">${maxPointsLabel}</strong>${medals}</div>
         </div>
       `;
     }
@@ -2495,22 +2496,77 @@
         return;
       }
 
+      const allStats = getAthleteStats();
+
       if (active.key === 'Athlete') {
-        const allStats = getAthleteStats();
         data.clubs.forEach(club => {
           const clubAthletes = allStats.filter(a => a.club === club.name).map(a => a.name);
           club.athletes = [...new Set(clubAthletes)];
         });
+      } else if (active.key !== 'NOLAAthlete' && active.key !== 'LiveTracker') {
+         data.clubs.forEach(club => {
+             const clubPlacements = [];
+             allStats.forEach(ath => {
+                 if (ath.club === club.name) {
+                     ath.placements.forEach(p => {
+                         if (active.key === 'TOTAL' || p.sheetKey === active.key) {
+                             clubPlacements.push(p);
+                         }
+                     });
+                 }
+             });
+             club.medalsHtml = formatMedals(clubPlacements);
+             club.placements = clubPlacements;
+         });
       }
 
       const clubsWithScore = data.clubs.filter(c => c.score !== null && c.score !== undefined);
       if (clubsWithScore.length > 0) {
-        const sorted = [...clubsWithScore].sort((a, b) => b.score - a.score);
+        const sorted = [...clubsWithScore].sort((a, b) => {
+           if (b.score !== a.score) return b.score - a.score;
+           if (!a.placements || !b.placements) return 0;
+           const aPlaces = Array(13).fill(0);
+           a.placements.forEach(p => aPlaces[p.place]++);
+           const bPlaces = Array(13).fill(0);
+           b.placements.forEach(p => bPlaces[p.place]++);
+           for (let i = 1; i <= 12; i++) {
+              if (aPlaces[i] !== bPlaces[i]) return bPlaces[i] - aPlaces[i];
+           }
+           return 0;
+        });
+        
+        let currentRank = 1;
+        let prevClub = null;
+        sorted.forEach((club, idx) => {
+           if (prevClub) {
+              const pointsMatch = club.score === prevClub.score;
+              let placementsMatch = true;
+              if (pointsMatch && club.placements && prevClub.placements) {
+                 const aPlaces = Array(13).fill(0);
+                 club.placements.forEach(p => aPlaces[p.place]++);
+                 const bPlaces = Array(13).fill(0);
+                 prevClub.placements.forEach(p => bPlaces[p.place]++);
+                 for (let i = 1; i <= 12; i++) {
+                   if (aPlaces[i] !== bPlaces[i]) {
+                     placementsMatch = false; break;
+                   }
+                 }
+              } else if (pointsMatch) {
+                 placementsMatch = (!club.placements && !prevClub.placements);
+              }
+              if (!pointsMatch || !placementsMatch) {
+                currentRank = idx + 1;
+              }
+           }
+           club.rank = currentRank;
+           prevClub = club;
+        });
+        
         data.clubs.forEach(club => {
-          if (club.score !== null && club.score !== undefined) {
-            club.rank = sorted.findIndex(c => c.score === club.score) + 1;
-          } else {
+          if (club.score === null || club.score === undefined) {
             club.rank = null;
+          } else {
+            club.rank = sorted.find(c => c.name === club.name).rank;
           }
         });
       } else {
@@ -2844,8 +2900,36 @@
         });
       });
 
-      athletes.sort((a, b) => b.totalPoints - a.totalPoints);
+      athletes.sort((a, b) => {
+        if (b.totalPoints !== a.totalPoints) {
+           return b.totalPoints - a.totalPoints;
+        }
+        const aPlaces = Array(13).fill(0);
+        a.placements.forEach(p => aPlaces[p.place]++);
+        const bPlaces = Array(13).fill(0);
+        b.placements.forEach(p => bPlaces[p.place]++);
+        for (let i = 1; i <= 12; i++) {
+           if (aPlaces[i] !== bPlaces[i]) {
+              return bPlaces[i] - aPlaces[i];
+           }
+        }
+        return 0;
+      });
       return athletes;
+    }
+
+    function formatMedals(placements) {
+      let g = 0, s = 0, b = 0;
+      placements.forEach(p => {
+        if (p.place === 1) g++;
+        else if (p.place === 2) s++;
+        else if (p.place === 3) b++;
+      });
+      let str = '';
+      if (g) str += '🥇' + g;
+      if (s) str += '🥈' + s;
+      if (b) str += '🥉' + b;
+      return str ? ` <span style="font-size:0.85em; opacity:0.9; margin-left: 6px;">${str}</span>` : '';
     }
 
     function initAthleteFilters() {
@@ -2939,15 +3023,30 @@
 
       const athletes = getAthleteStats();
 
-      // Assign global ranks taking ties into account
+      // Assign global ranks taking ties and placements into account
       let currentRank = 1;
-      let prevPoints = -1;
+      let prevAth = null;
       athletes.forEach((ath, idx) => {
-        if (ath.totalPoints !== prevPoints) {
-          currentRank = idx + 1;
-          prevPoints = ath.totalPoints;
+        if (prevAth) {
+          const pointsMatch = ath.totalPoints === prevAth.totalPoints;
+          let placementsMatch = true;
+          if (pointsMatch) {
+             const aPlaces = Array(13).fill(0);
+             ath.placements.forEach(p => aPlaces[p.place]++);
+             const bPlaces = Array(13).fill(0);
+             prevAth.placements.forEach(p => bPlaces[p.place]++);
+             for (let i = 1; i <= 12; i++) {
+               if (aPlaces[i] !== bPlaces[i]) {
+                 placementsMatch = false; break;
+               }
+             }
+          }
+          if (!pointsMatch || !placementsMatch) {
+            currentRank = idx + 1;
+          }
         }
         ath.rank = currentRank;
+        prevAth = ath;
       });
 
       const filtered = athletes.filter(ath => {
