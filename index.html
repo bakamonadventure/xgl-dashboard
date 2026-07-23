@@ -3101,9 +3101,20 @@
 
         // Name
         const nameTd = document.createElement('td');
-        nameTd.style.fontWeight = '700';
-        nameTd.style.color = '#ffffff';
-        nameTd.textContent = ath.name;
+        const nameDiv = document.createElement('div');
+        nameDiv.style.fontWeight = '700';
+        nameDiv.style.color = '#ffffff';
+        nameDiv.textContent = ath.name;
+        nameTd.appendChild(nameDiv);
+
+        const totalMedalsHtml = formatMedals(ath.placements).replace('margin-left: 6px;', 'margin-left: 0;');
+        if (totalMedalsHtml) {
+          const medalsDiv = document.createElement('div');
+          medalsDiv.innerHTML = totalMedalsHtml;
+          medalsDiv.style.marginTop = '4px';
+          nameTd.appendChild(medalsDiv);
+        }
+        
         tr.appendChild(nameTd);
 
         // Club
@@ -3136,7 +3147,8 @@
           if (locPlacements.length > 0) {
             const sumDiv = document.createElement('div');
             sumDiv.style.fontWeight = '600';
-            sumDiv.textContent = pts;
+            const medalsHtml = formatMedals(locPlacements);
+            sumDiv.innerHTML = `${pts}${medalsHtml}`;
 
             const detailDiv = document.createElement('div');
             detailDiv.style.fontSize = '0.74rem';
