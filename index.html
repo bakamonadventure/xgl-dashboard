@@ -2480,6 +2480,29 @@
       `;
     }
 
+    function getTeamPlacementsForSim(simAddedPlacesByTeam) {
+        const allStats = getAthleteStats();
+        const basePlaces = { 'TKO': Array(13).fill(0), 'NY': Array(13).fill(0), 'LA': Array(13).fill(0), 'SP': Array(13).fill(0) };
+        allStats.forEach(ath => {
+            const canonicalClub = getCanonicalClub(ath.club);
+            if (basePlaces[canonicalClub]) {
+                ath.placements.forEach(p => {
+                    basePlaces[canonicalClub][p.place]++;
+                });
+            }
+        });
+        Object.keys(simAddedPlacesByTeam).forEach(team => {
+            if (basePlaces[team]) {
+                simAddedPlacesByTeam[team].forEach(placeVal => {
+                    if (placeVal >= 1 && placeVal <= 12) {
+                        basePlaces[team][placeVal]++;
+                    }
+                });
+            }
+        });
+        return basePlaces;
+    }
+
     function renderSummary() {
       const active = getSheetMeta(state.activeSheet);
       const data = state.sheetData[active.key];
@@ -3923,20 +3946,33 @@
 
       function renderContent() {
         const simAdditions = { 'TKO': 0, 'NY': 0, 'LA': 0, 'SP': 0 };
+        const simPlacesByTeam = { 'TKO': [], 'NY': [], 'LA': [], 'SP': [] };
         Object.values(window.simState).forEach(sim => {
           let tName = String(sim.team).trim().toUpperCase();
           if (tName === 'TOK' || tName === 'TK' || tName === 'TOKYO') tName = 'TKO';
           if (simAdditions[tName] !== undefined) {
             simAdditions[tName] += sim.points > 0 ? sim.points : 0;
+            if (sim.place >= 1 && sim.place <= 12) {
+                simPlacesByTeam[tName].push(sim.place);
+            }
           }
         });
+
+        const combinedPlaces = getTeamPlacementsForSim(simPlacesByTeam);
 
         const leaderboard = Object.keys(baseTeams).map(tName => ({
           name: tName,
           base: baseTeams[tName],
           sim: simAdditions[tName],
-          total: baseTeams[tName] + simAdditions[tName]
-        })).sort((a, b) => b.total - a.total);
+          total: baseTeams[tName] + simAdditions[tName],
+          places: combinedPlaces[tName]
+        })).sort((a, b) => {
+           if (b.total !== a.total) return b.total - a.total;
+           for (let i = 1; i <= 12; i++) {
+              if (a.places[i] !== b.places[i]) return b.places[i] - a.places[i];
+           }
+           return 0;
+        });
 
         const tkoTotal = (baseTeams['TKO'] || 0) + simAdditions['TKO'];
         const finalEventMax = { 'NY': 180, 'LA': 100, 'SP': 100 };
@@ -4412,6 +4448,8 @@
         }
 
         const livePoints = { 'TKO': 0, 'NY': 0, 'LA': 0, 'SP': 0 };
+        const livePlaces = { 'TKO': [], 'NY': [], 'LA': [], 'SP': [] };
+        const ptsMapToPlace = { '100': 1, '80': 2, '60': 3, '40': 4, '30': 5, '20': 6 };
         const ptsMap = { '100': 100, '80': 80, '60': 60, '40': 40, '30': 30, '20': 20, '7th': 0, '8th': 0, '9th': 0, '10th': 0, '11th': 0, '12th': 0, '-1': 0 };
         
         Object.values(window.liveTrackerState.ranks).forEach(r => {
@@ -4419,15 +4457,24 @@
           if (tName === 'TOK' || tName === 'TK') tName = 'TKO';
           if (livePoints[tName] !== undefined && ptsMap[r.rank] !== undefined) {
             livePoints[tName] += ptsMap[r.rank];
+            if (ptsMapToPlace[r.rank]) livePlaces[tName].push(ptsMapToPlace[r.rank]);
           }
         });
 
+        const combinedPlacesLT = getTeamPlacementsForSim(livePlaces);
+
         const finalScores = [
-          { team: 'TKO', score: basePoints['TKO'] + livePoints['TKO'], live: livePoints['TKO'], base: basePoints['TKO'] },
-          { team: 'NY', score: basePoints['NY'] + livePoints['NY'], live: livePoints['NY'], base: basePoints['NY'] },
-          { team: 'LA', score: basePoints['LA'] + livePoints['LA'], live: livePoints['LA'], base: basePoints['LA'] },
-          { team: 'SP', score: basePoints['SP'] + livePoints['SP'], live: livePoints['SP'], base: basePoints['SP'] }
-        ].sort((a,b) => b.score - a.score);
+          { team: 'TKO', score: basePoints['TKO'] + livePoints['TKO'], live: livePoints['TKO'], base: basePoints['TKO'], places: combinedPlacesLT['TKO'] },
+          { team: 'NY', score: basePoints['NY'] + livePoints['NY'], live: livePoints['NY'], base: basePoints['NY'], places: combinedPlacesLT['NY'] },
+          { team: 'LA', score: basePoints['LA'] + livePoints['LA'], live: livePoints['LA'], base: basePoints['LA'], places: combinedPlacesLT['LA'] },
+          { team: 'SP', score: basePoints['SP'] + livePoints['SP'], live: livePoints['SP'], base: basePoints['SP'], places: combinedPlacesLT['SP'] }
+        ].sort((a,b) => {
+           if (b.score !== a.score) return b.score - a.score;
+           for (let i = 1; i <= 12; i++) {
+              if (a.places[i] !== b.places[i]) return b.places[i] - a.places[i];
+           }
+           return 0;
+        });
 
         let lbHtml = `<div class="card" style="background: linear-gradient(180deg, rgba(30,41,59,0.7), rgba(0,0,0,0.5)); border: 1px solid rgba(255,255,255,0.1);">
           <h3 style="margin-top:0; margin-bottom: 20px; color: #fff; font-size: 1.3rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">🏆 Live Projected Leaderboard</h3>
