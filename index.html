@@ -4622,6 +4622,60 @@
         state.sheetData[result.key] = result.data;
       });
 
+      // --- Dynamic Attendance and MAX POINTS Calculation ---
+      try {
+        const eventSheets = ['SAC', 'CHIBA', 'NOLA'];
+        eventSheets.forEach(key => {
+          const athleteSheet = state.sheetData[key + 'Athlete'];
+          const scoreSheet = state.sheetData[key];
+          if (!athleteSheet || !athleteSheet.rawRows || !scoreSheet || !scoreSheet.clubs) return;
+
+          const clubEntries = { 'NY': 0, 'LA': 0, 'SP': 0, 'TKO': 0 };
+          const clubMaxPoints = { 'NY': 0, 'LA': 0, 'SP': 0, 'TKO': 0 };
+
+          for (let c = 2; c < 40; c += 4) { 
+            let eventEntries = { 'NY': 0, 'LA': 0, 'SP': 0, 'TKO': 0 };
+            for (let r = 0; r < athleteSheet.rawRows.length; r++) {
+               const row = athleteSheet.rawRows[r];
+               if (!row) continue;
+               const athleteName = row[c] ? String(row[c]).trim() : '';
+               const lowerName = athleteName.toLowerCase();
+               if (lowerName === '' || lowerName.includes('x games') || lowerName.includes('athlete list') || lowerName.includes('free agent') || lowerName.match(/\b(skb|bmx|park|street|dirt|vert)\b/)) continue;
+               if (athleteName.length < 3 || athleteName.length > 40) continue;
+               const teamRaw = (c + 1 < row.length && row[c+1]) ? String(row[c+1]).trim() : '';
+               let canonical = getCanonicalClub(teamRaw);
+               if (canonical === 'TK') canonical = 'TKO';
+               if (eventEntries[canonical] !== undefined) {
+                  eventEntries[canonical]++;
+               }
+            }
+            
+            const PLACE_POINTS = [100, 80, 60, 40, 30, 20];
+            Object.keys(eventEntries).forEach(team => {
+               const count = eventEntries[team];
+               if (count > 0) {
+                  clubEntries[team] += count;
+                  for(let i = 0; i < Math.min(count, 6); i++) {
+                     clubMaxPoints[team] += PLACE_POINTS[i];
+                  }
+               }
+            });
+          }
+
+          scoreSheet.clubs.forEach(club => {
+             const cname = club.name === 'TK' ? 'TKO' : club.name;
+             if (clubEntries[cname] !== undefined && clubEntries[cname] > 0) {
+                club.metrics = club.metrics || {};
+                club.metrics.Attendance = clubEntries[cname];
+                club.metrics['MAX POINTS'] = clubMaxPoints[cname];
+             }
+          });
+        });
+      } catch (err) {
+        console.error("Dynamic calculation failed", err);
+      }
+      // ----------------------------------------------------
+
       renderSummary();
       renderSheetDetails();
     }
