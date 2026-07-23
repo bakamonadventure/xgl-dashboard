@@ -2711,40 +2711,26 @@
         return d;
       }
 
-      // 1. Add athletes from the main Athlete sheet
-      if (athleteData && athleteData.clubs) {
-        athleteData.clubs.forEach(club => {
-          const canonicalClub = getCanonicalClub(club.name);
-          club.athletes.forEach(athleteName => {
-            const nameKey = athleteName.trim().toLowerCase();
-            const compositeKey = nameKey + '_' + canonicalClub;
-            athleteClubMap.set(compositeKey, { name: athleteName, club: canonicalClub, palette: club.palette, disciplines: new Set() });
-          });
-        });
-      }
-
-      // 2. Add any missing athletes who have a club in the event ATHLETE sheets
+      // 1. Build athlete roster from Event ATHLETE sheets (SAC, CHIBA, NOLA)
+      // Do not use the main Athlete sheet as the basis, per user request.
       eventSheets.forEach(key => {
         const athleteSheet = state.sheetData[key + 'Athlete'];
         if (athleteSheet && athleteSheet.rawRows) {
            for (let r = 0; r < athleteSheet.rawRows.length; r++) {
              const row = athleteSheet.rawRows[r];
-             for (let c = 0; c < row.length - 1; c++) {
+             // In Event ATHLETE sheets, athlete names are at columns 2, 6, 10, 14, 18, 22...
+             for (let c = 2; c < row.length; c += 4) {
                 if (row[c] && typeof row[c] === 'string' && row[c].trim() !== '') {
-                   const team = row[c+1] ? String(row[c+1]).trim() : '';
-                   
-                   // Only pick up if it's a valid team token. Free agents with points will be added via placements logic.
-                   if (!isClubNameToken(team)) {
-                     continue;
-                   }
-
-                   const canonicalClub = getCanonicalClub(team);
                    const athleteName = row[c].trim();
-                   
-                   // Filter out common header strings that might accidentally have a token next to them
-                   if (athleteName.toLowerCase().includes('x games') || athleteName.toLowerCase().includes('athlete list') || athleteName.toLowerCase().includes('best trick')) {
+                   // Filter out common header strings that might accidentally be in these columns
+                   const lowerName = athleteName.toLowerCase();
+                   if (lowerName.includes('x games') || lowerName.includes('athlete list') || lowerName.includes('best trick') || lowerName.includes('free agent') || lowerName.match(/\b(skb|bmx|park|street|dirt|vert)\b/)) {
                      continue;
                    }
+                   if (athleteName.length < 3 || athleteName.length > 40) continue;
+
+                   const team = (c + 1 < row.length && row[c+1]) ? String(row[c+1]).trim() : '';
+                   const canonicalClub = isClubNameToken(team) ? getCanonicalClub(team) : 'Free Agent';
 
                    const nameKey = athleteName.toLowerCase();
                    const compositeKey = nameKey + '_' + canonicalClub;
