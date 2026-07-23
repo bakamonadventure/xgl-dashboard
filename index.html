@@ -2897,13 +2897,20 @@
       sportSelect.style.boxShadow = '0 8px 20px rgba(15, 23, 42, 0.05)';
       sportSelect.innerHTML = `
         <option value="">All Disciplines</option>
-        <option value="Skateboard">Skateboard (All)</option>
-        <option value="Street">Street</option>
-        <option value="Park">Park</option>
-        <option value="Vert">Vert</option>
-        <option value="Dirt">Dirt</option>
-        <option value="Best Trick">Best Trick</option>
-        <option value="BMX">BMX (All)</option>
+        <optgroup label="Skateboard">
+          <option value="Skateboard">Skateboard (All)</option>
+          <option value="Skateboard Street">Street</option>
+          <option value="Skateboard Park">Park</option>
+          <option value="Skateboard Vert">Vert</option>
+          <option value="Skateboard Best Trick">Best Trick</option>
+        </optgroup>
+        <optgroup label="BMX">
+          <option value="BMX">BMX (All)</option>
+          <option value="BMX Park">Park</option>
+          <option value="BMX Street">Street</option>
+          <option value="BMX Dirt">Dirt</option>
+          <option value="BMX Best Trick">Best Trick</option>
+        </optgroup>
       `;
       sportSelect.addEventListener('change', () => updateAthleteLeaderboard());
       filtersDiv.appendChild(sportSelect);
@@ -2951,7 +2958,11 @@
           if (sportVal === 'Skateboard' || sportVal === 'BMX') {
              if (ath.sport !== sportVal) return false;
           } else {
-             if (!ath.disciplines.some(d => d.includes(sportVal))) return false;
+             const parts = sportVal.split(' ');
+             const reqSport = parts[0];
+             const reqDiscipline = parts.slice(1).join(' ');
+             if (ath.sport !== reqSport) return false;
+             if (!ath.disciplines.some(d => d.includes(reqDiscipline))) return false;
           }
         }
         if (genderVal && ath.gender !== genderVal) return false;
