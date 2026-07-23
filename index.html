@@ -2532,7 +2532,7 @@
       'Sora Shirai': { sport: 'Skateboard', gender: 'Men' },
       'Mizuho Hasegawa': { sport: 'Skateboard', gender: 'Women' },
       'Coco Yoshizawa': { sport: 'Skateboard', gender: 'Women' },
-      'Miharu Ozawa': { sport: 'Skateboard', gender: 'Women' },
+      'Miharu Ozawa': { sport: 'BMX', gender: 'Women' },
       'Yumeka Oda': { sport: 'Skateboard', gender: 'Women' },
       'Chris Joslin': { sport: 'Skateboard', gender: 'Men' },
       'Shilo Catori': { sport: 'Skateboard', gender: 'Women' },
@@ -2754,7 +2754,9 @@
                         name: athleteName, 
                         club: canonicalClub, 
                         palette: getTeamPalette(team),
-                        disciplines: new Set()
+                        disciplines: new Set(),
+                        inferredSport: null,
+                        inferredGender: null
                       });
                    }
                    
@@ -2771,6 +2773,12 @@
                    }
                    if (headerStr) {
                      extractDisciplines(headerStr).forEach(d => athleteClubMap.get(compositeKey).disciplines.add(d));
+                     const s = headerStr.toLowerCase();
+                     if (s.includes('bmx')) athleteClubMap.get(compositeKey).inferredSport = 'BMX';
+                     else if (s.includes('skb') || s.includes('skateboard')) athleteClubMap.get(compositeKey).inferredSport = 'Skateboard';
+                     
+                     if (s.includes('women')) athleteClubMap.get(compositeKey).inferredGender = 'Women';
+                     else if (s.includes('men')) athleteClubMap.get(compositeKey).inferredGender = 'Men';
                    }
                 }
              }
@@ -2795,7 +2803,9 @@
             name: p.athleteName.trim(),
             club: canonicalClub,
             palette: teamForEvent ? getTeamPalette(teamForEvent) : { primary: '#64748b', text: '#ffffff' },
-            disciplines: new Set()
+            disciplines: new Set(),
+            inferredSport: null,
+            inferredGender: null
           });
         }
         
@@ -2818,6 +2828,9 @@
         } else if (placements.length > 0) {
           sport = placements[0].sport;
           gender = placements[0].gender;
+        } else {
+          if (info.inferredSport) sport = info.inferredSport;
+          if (info.inferredGender) gender = info.inferredGender;
         }
 
         // Add default disciplines if empty, using sport
