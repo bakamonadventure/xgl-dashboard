@@ -2517,6 +2517,24 @@
              });
              club.medalsHtml = formatMedals(clubPlacements);
              club.placements = clubPlacements;
+             
+             if (active.key === 'TOTAL') {
+                 club.metrics = club.metrics || {};
+                 let totalAtt = 0;
+                 let totalMax = 0;
+                 ['SAC', 'CHIBA', 'NOLA'].forEach(eventKey => {
+                     const eventSheetData = state.sheetData[eventKey];
+                     if (eventSheetData && eventSheetData.clubs) {
+                         const eventClub = eventSheetData.clubs.find(c => c.name === club.name);
+                         if (eventClub && eventClub.metrics) {
+                             if (eventClub.metrics.Attendance) totalAtt += eventClub.metrics.Attendance;
+                             if (eventClub.metrics['MAX POINTS']) totalMax += eventClub.metrics['MAX POINTS'];
+                         }
+                     }
+                 });
+                 if (totalAtt > 0) club.metrics.Attendance = totalAtt;
+                 if (totalMax > 0) club.metrics['MAX POINTS'] = totalMax;
+             }
          });
       }
 
