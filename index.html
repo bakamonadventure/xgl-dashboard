@@ -2690,23 +2690,16 @@
         }
       });
 
-      const placementsByName = {};
-      allPlacements.forEach(p => {
-        const nameKey = p.athleteName.trim().toLowerCase();
-        if (!placementsByName[nameKey]) {
-          placementsByName[nameKey] = [];
-        }
-        placementsByName[nameKey].push(p);
-      });
-
-      const athleteMap = new Map(); // nameKey -> { name, club, palette }
+      const athleteClubMap = new Map(); // compositeKey -> { name, club, palette }
 
       // 1. Add athletes from the main Athlete sheet
       if (athleteData && athleteData.clubs) {
         athleteData.clubs.forEach(club => {
+          const canonicalClub = getCanonicalClub(club.name);
           club.athletes.forEach(athleteName => {
             const nameKey = athleteName.trim().toLowerCase();
-            athleteMap.set(nameKey, { name: athleteName, club: getCanonicalClub(club.name), palette: club.palette });
+            const compositeKey = nameKey + '_' + canonicalClub;
+            athleteClubMap.set(compositeKey, { name: athleteName, club: canonicalClub, palette: club.palette });
           });
         });
       }
@@ -2720,12 +2713,17 @@
              for (let c = 0; c < row.length - 1; c++) {
                 if (row[c] && typeof row[c] === 'string' && row[c].trim() !== '') {
                    const team = row[c+1] ? String(row[c+1]).trim() : '';
-                   if (isClubNameToken(team)) {
-                      const athleteName = row[c].trim();
-                      const nameKey = athleteName.toLowerCase();
-                      if (!athleteMap.has(nameKey)) {
-                         athleteMap.set(nameKey, { name: athleteName, club: getCanonicalClub(team), palette: getTeamPalette(team) });
-                      }
+                   // Only pick up if it's a team token, or if it explicitly says Free Agent (we'll capture actual free agents via placements or here if they are blank but listed)
+                   const canonicalClub = isClubNameToken(team) ? getCanonicalClub(team) : 'Free Agent';
+                   const athleteName = row[c].trim();
+                   const nameKey = athleteName.toLowerCase();
+                   const compositeKey = nameKey + '_' + canonicalClub;
+                   if (!athleteClubMap.has(compositeKey)) {
+                      athleteClubMap.set(compositeKey, { 
+                        name: athleteName, 
+                        club: canonicalClub, 
+                        palette: isClubNameToken(team) ? getTeamPalette(team) : { primary: '#64748b', text: '#ffffff' } 
+                      });
                    }
                 }
              }
@@ -2733,10 +2731,31 @@
         }
       });
 
+      const placementsByComposite = {};
+      allPlacements.forEach(p => {
+        const nameKey = p.athleteName.trim().toLowerCase();
+        const teamForEvent = getAthleteTeamForEvent(p.athleteName, p.sheetKey);
+        const canonicalClub = teamForEvent ? getCanonicalClub(teamForEvent) : 'Free Agent';
+        const compositeKey = nameKey + '_' + canonicalClub;
+
+        if (!placementsByComposite[compositeKey]) {
+          placementsByComposite[compositeKey] = [];
+        }
+        placementsByComposite[compositeKey].push(p);
+
+        if (!athleteClubMap.has(compositeKey)) {
+          athleteClubMap.set(compositeKey, {
+            name: p.athleteName.trim(),
+            club: canonicalClub,
+            palette: teamForEvent ? getTeamPalette(teamForEvent) : { primary: '#64748b', text: '#ffffff' }
+          });
+        }
+      });
+
       const athletes = [];
       
-      athleteMap.forEach((info, nameKey) => {
-        const placements = placementsByName[nameKey] || [];
+      athleteClubMap.forEach((info, compositeKey) => {
+        const placements = placementsByComposite[compositeKey] || [];
 
         let sport = 'Skateboard';
         let gender = 'Men';
@@ -2750,11 +2769,7 @@
 
         const pointsByEvent = { SAC: 0, CHIBA: 0, NOLA: 0 };
         placements.forEach(p => {
-          const teamForEvent = getAthleteTeamForEvent(info.name, p.sheetKey);
-          // Only add points if they were on a team (not a free agent)
-          if (teamForEvent && pointsByEvent[p.sheetKey] !== undefined) {
-            pointsByEvent[p.sheetKey] += p.points;
-          }
+           pointsByEvent[p.sheetKey] += p.points;
         });
 
         const totalPoints = pointsByEvent.SAC + pointsByEvent.CHIBA + pointsByEvent.NOLA;
@@ -2767,7 +2782,7 @@
           points: pointsByEvent,
           totalPoints,
           placements,
-          palette: info.palette || getTeamPalette(info.club)
+          palette: info.palette || (info.club !== 'Free Agent' ? getTeamPalette(info.club) : { primary: '#64748b', text: '#ffffff' })
         });
       });
 
@@ -2811,6 +2826,7 @@
         <option value="NY">NY</option>
         <option value="LA">LA</option>
         <option value="SP">SP</option>
+        <option value="Free Agent">Free Agent</option>
       `;
       clubSelect.addEventListener('change', () => updateAthleteLeaderboard());
       filtersDiv.appendChild(clubSelect);
