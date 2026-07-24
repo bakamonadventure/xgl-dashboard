@@ -3456,8 +3456,8 @@
 
               if (!athleteName) continue;
               if (/^[0-9]+$/.test(athleteName)) continue;
-              if (athleteName.toLowerCase().startsWith('declined')) break;
-              if (athleteName.toLowerCase().startsWith('alternates')) break;
+              if (athleteName.toLowerCase().startsWith('decline')) break;
+              if (athleteName.toLowerCase().startsWith('alternate')) break;
 
               if (kwRegex.test(athleteName) && !athleteName.toLowerCase().includes('athlete')) {
                 break;
@@ -5104,7 +5104,7 @@
                 }
 
                 const lowerVal = val.toLowerCase();
-                if (lowerVal.includes('declined') || lowerVal.includes('alternate')) continue;
+                if (lowerVal.includes('decline') || lowerVal.includes('alternate')) continue;
                 if (mapHeaderToEvKey(val)) break;
                 
                 if (isNaN(val)) {
