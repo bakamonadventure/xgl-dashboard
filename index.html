@@ -5103,8 +5103,8 @@
                   if (numVal === 'x') continue;
                 }
 
-                const lowerVal = val.toLowerCase();
-                if (lowerVal.includes('decline') || lowerVal.includes('alternate')) continue;
+                const lowerVal = val.trim().toLowerCase();
+                if (lowerVal.startsWith('decline') || lowerVal.startsWith('alternate')) break;
                 if (mapHeaderToEvKey(val)) break;
                 
                 if (isNaN(val)) {
