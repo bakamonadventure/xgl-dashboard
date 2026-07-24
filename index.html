@@ -3602,6 +3602,13 @@
         const nolaData = state.sheetData['NOLAAthlete'];
         if (!nolaData || !nolaData.nolaAthletes) return;
 
+        // Get actual NOLA placements from spreadsheet to prioritize them
+        const nolaScores = state.sheetData['NOLA'];
+        const actualNolaPlacements = [];
+        if (nolaScores && nolaScores.rawRows) {
+          actualNolaPlacements.push(...extractAthletePlacements(nolaScores.rawRows, 'NOLA'));
+        }
+
         nolaData.nolaAthletes.forEach(disc => {
           const POINT_VALUES = [100, 80, 60, 40, 30, 20];
           const RANK_STRS = ['100', '80', '60', '40', '30', '20', '7th', '8th', '9th', '10th', '11th', '12th'];
@@ -3629,6 +3636,28 @@
             if (s && s._predicted) {
               // Clear auto-predicted entries so we can re-assign cleanly
               delete window.simState[key];
+            }
+          });
+
+          // Lock actual NOLA placements from the spreadsheet if present
+          disc.athletes.forEach(a => {
+            const key = `${disc.title}-${a.name}`.replace(/[^a-zA-Z0-9]/g, '');
+            if (!window.simState[key]) {
+              const actual = actualNolaPlacements.find(p => p.athleteName.trim().toLowerCase() === a.name.trim().toLowerCase());
+              if (actual) {
+                let rankStr = '0';
+                if (actual.points === 100) rankStr = '100';
+                else if (actual.points === 80) rankStr = '80';
+                else if (actual.points === 60) rankStr = '60';
+                else if (actual.points === 40) rankStr = '40';
+                else if (actual.points === 30) rankStr = '30';
+                else if (actual.points === 20) rankStr = '20';
+                else if (actual.place >= 7 && actual.place <= 12) rankStr = actual.place + 'th';
+                
+                if (rankStr !== '0') {
+                  window.simState[key] = { team: a.team, points: actual.points, rank: rankStr, _predicted: false, _actual: true };
+                }
+              }
             }
           });
 
