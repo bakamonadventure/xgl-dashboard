@@ -3774,8 +3774,12 @@
       window.baseTeams = baseTeams;
       if (totalData && totalData.clubs) {
         totalData.clubs.forEach(c => {
-          let tName = c.name;
-          if (tName === 'TOK') tName = 'TKO';
+          let tName = String(c.name).trim().toUpperCase();
+          if (tName === 'TOK' || tName === 'TK' || tName === 'TOKYO') tName = 'TKO';
+          if (tName.startsWith('NY') || tName.includes('NEW')) tName = 'NY';
+          if (tName.startsWith('LA')) tName = 'LA';
+          if (tName.startsWith('SP') || tName.includes('SAO')) tName = 'SP';
+          
           if (baseTeams[tName] !== undefined && c.score !== null) {
             baseTeams[tName] = c.score;
             const pot = calculateMaxPotential(c, 'TOTAL');
@@ -3920,7 +3924,28 @@
           // Step 4: Sort by past average, with random tiebreak
           const athletesWithScore = activeAthletes.map(a => {
             const name = a.name.trim().toLowerCase();
-            const avg = avgPoints[name] ? (avgPoints[name].total / avgPoints[name].count) : 0;
+            let avg = 0;
+            if (avgPoints[name]) {
+              avg = avgPoints[name].total / avgPoints[name].count;
+            } else {
+              // Fuzzy match for reversed names or country codes
+              const cleanName = name.replace(/[\(\)]/g, '');
+              const parts = cleanName.split(/\s+/).filter(p => p.length > 2);
+              if (parts.length >= 2) {
+                const reversedName = `${parts[1]} ${parts[0]}`;
+                if (avgPoints[reversedName]) {
+                  avg = avgPoints[reversedName].total / avgPoints[reversedName].count;
+                } else {
+                  for (const k of Object.keys(avgPoints)) {
+                     const cleanK = k.replace(/[\(\)]/g, '');
+                     if (parts.every(part => cleanK.includes(part))) {
+                        avg = avgPoints[k].total / avgPoints[k].count;
+                        break;
+                     }
+                  }
+                }
+              }
+            }
             return { ...a, avg, rand: Math.random() };
           });
           athletesWithScore.sort((a, b) => {
