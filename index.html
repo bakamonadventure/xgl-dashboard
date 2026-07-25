@@ -4004,7 +4004,7 @@
               const sim = window.simState[key];
               let tName = String(ath.team).trim().toUpperCase();
               if (tName === 'TOK' || tName === 'TK' || tName === 'TOKYO') tName = 'TKO';
-              if (sim && sim.points > 0 && !sim._predicted) {
+              if (sim && sim.points > 0) {
                 if (['TKO', 'NY', 'LA', 'SP'].includes(tName)) {
                   state.fixedPtsByTeam[tName] += sim.points;
                 }
@@ -5531,7 +5531,7 @@
 
           if (sim.points === -1 || String(sim.rank) === '-1' || String(sim.rank) === '-2') {
             optAthletes.add(name);
-          } else if (sim.points > 0 && !sim._predicted) {
+          } else if (sim.points > 0) {
             currentStateStr += `- ${name} (${tName}): ${sim.points}pt\n`;
             if (currentOverallScores[tName] !== undefined) {
               currentOverallScores[tName] += sim.points;
