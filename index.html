@@ -1844,7 +1844,7 @@
         'mcTrailing': 'trailing',
         'mcAnalysisLine1': 'Currently, TKO is {leadStr} {rival} by {diff}pt based on locked-in scores.',
         'mcAnalysisLine2': 'However, in the remaining unassigned events, TKO has {tkoSlots} athlete slot(s) left while {rival} has {rivalSlots} slot(s).',
-        'mcAnalysisLine1Gen': 'Looking at the current standings, we ({team}) are {leadStr} our main rival {rival} by {diff}pt.',
+        'mcAnalysisLine1Gen': 'Based on actual points (excluding predictions), we ({team}) are {leadStr} our main rival {rival} by {diff}pt.',
         'mcAnalysisLine2Gen': 'Looking ahead, we have {tSlots} athlete slot(s) left to score, while {rival} has {rivalSlots} slot(s).',
         'mcAnalysisLine3': 'Given this point differential and the remaining opportunities, our mathematical chance of winning the championship is {rate}%.',
         'resetSimBtn': 'Reset Selections',
@@ -1955,7 +1955,7 @@
         'mcTrailing': 'ビハインドで',
         'mcAnalysisLine1': '現在確定しているポイントでは、TKOは{rival}に対して {diff}pt {leadStr}います。',
         'mcAnalysisLine2': 'しかし未確定の残り種目において、TKOの出場枠が {tkoSlots}枠 なのに対し、{rival}は {rivalSlots}枠 残っています。',
-        'mcAnalysisLine1Gen': '現在確定しているポイントでは、我々【{team}】は最大のライバルである{rival}に対して {diff}pt {leadStr}います。',
+        'mcAnalysisLine1Gen': '予測を除いた現在の実獲得ポイントでは、我々【{team}】は最大のライバルである{rival}に対して {diff}pt {leadStr}います。',
         'mcAnalysisLine2Gen': '今後の残り種目において、我々の出場枠（ポイント獲得チャンス）が {tSlots}枠 なのに対し、{rival}は {rivalSlots}枠 残っています。',
         'mcAnalysisLine3': 'この「現在の点差」と「残りチャンスの差」を考慮すると、我々の逆転・逃げ切りの優勝確率は {rate}% となります。',
         'resetSimBtn': '選択をリセット',
@@ -3883,7 +3883,14 @@
           disc.athletes.forEach(a => {
             const key = `${disc.title}-${a.name}`.replace(/[^a-zA-Z0-9]/g, '');
             if (!window.simState[key]) {
-              const actual = actualNolaPlacements.find(p => p.athleteName.trim().toLowerCase() === a.name.trim().toLowerCase());
+              const actual = actualNolaPlacements.find(p => {
+                const pName = p.athleteName.trim().toLowerCase().replace(/[\(\)]/g, '');
+                const aName = a.name.trim().toLowerCase().replace(/[\(\)]/g, '');
+                if (pName === aName) return true;
+                const parts = aName.split(/\s+/).filter(part => part.length > 2);
+                if (parts.length >= 2 && parts.every(part => pName.includes(part))) return true;
+                return false;
+              });
               if (actual) {
                 let rankStr = '0';
                 if (actual.points === 100) rankStr = '100';
