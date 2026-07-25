@@ -2464,10 +2464,9 @@
 
       const scoreLabel = club.score !== null && club.score !== undefined ? club.score.toLocaleString('ja-JP') : '—';
       const attendanceLabel = club.metrics?.Attendance != null ? club.metrics.Attendance.toLocaleString('ja-JP') : '—';
-      const maxPointsLabel = club.metrics?.['MAX POINTS'] != null ? club.metrics['MAX POINTS'].toLocaleString('ja-JP') : '—';
       const medals = club.medalsHtml ? ` <br><div style="margin-top: 4px;">Medals: ${club.medalsHtml}</div>` : '';
       
-      let progressBarHtml = '';
+      let heroAndProgressHtml = '';
       if (club.score !== null && club.metrics?.['MAX POINTS']) {
         const totalMax = club.metrics['MAX POINTS'];
         const currentScore = club.score || 0;
@@ -2498,15 +2497,36 @@
         const currentPct = Math.min(100, (currentScore / totalMax) * 100);
         const remainingPct = Math.min(100, (remainingPotential / totalMax) * 100);
         
-        progressBarHtml = `
-          <div style="margin-top: 16px;">
-            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 6px; opacity: 0.9; font-family: var(--number-font);">
-              <span style="font-weight:700;">${currentScore} pts</span>
-              <span>Max Potential: <strong style="color:${contrast}">${maxPotential}</strong> / ${totalMax}</span>
+        heroAndProgressHtml = `
+          <div class="card-hero" style="background:transparent; color:${contrast}; margin-top: 16px; display: flex; justify-content: space-between; align-items: flex-end;">
+            <div>
+              <div class="hero-score" style="color:${contrast}; font-size: clamp(2.5rem, 4vw, 3.5rem);">${scoreLabel}</div>
+              <div class="hero-subtext" style="color:${contrast}; opacity:0.9;">Current Score</div>
             </div>
-            <div style="width: 100%; height: 10px; background: rgba(0,0,0,0.4); border-radius: 5px; overflow: hidden; display: flex; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);">
+            
+            <div style="text-align: right; padding-bottom: 4px;">
+              <div style="font-family: var(--number-font); font-size: 1.5rem; font-weight: 700; color: ${contrast}; opacity: 0.95;">${maxPotential}</div>
+              <div class="hero-subtext" style="color:${contrast}; opacity: 0.75;">Max Potential</div>
+            </div>
+          </div>
+
+          <div style="margin-top: 14px;">
+            <div style="width: 100%; height: 6px; background: rgba(0,0,0,0.3); border-radius: 3px; overflow: hidden; display: flex; box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);">
               <div style="width: ${currentPct}%; background: ${contrast}; transition: width 0.5s ease-out;"></div>
-              <div style="width: ${remainingPct}%; background: repeating-linear-gradient(45deg, transparent, transparent 4px, ${contrast} 4px, ${contrast} 8px); opacity: 0.4; transition: width 0.5s ease-out;"></div>
+              <div style="width: ${remainingPct}%; background: repeating-linear-gradient(45deg, transparent, transparent 4px, ${contrast} 4px, ${contrast} 8px); opacity: 0.35; transition: width 0.5s ease-out;"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-top: 6px; font-size: 0.8rem; opacity: 0.6; font-family: var(--number-font);">
+              <span></span>
+              <span>Theoretical Max: ${totalMax}</span>
+            </div>
+          </div>
+        `;
+      } else {
+        heroAndProgressHtml = `
+          <div class="card-hero" style="background:transparent; color:${contrast}; margin-top: 16px;">
+            <div>
+              <div class="hero-score" style="color:${contrast}">${scoreLabel}</div>
+              <div class="hero-subtext" style="color:${contrast}; opacity:0.9">Current score</div>
             </div>
           </div>
         `;
@@ -2515,15 +2535,10 @@
       return `
         <div class="card" style="background:${palette.primary}; color:${contrast}; border: none;">
           ${headerHtml}
-          <div class="card-hero" style="background:transparent; color:${contrast}; margin-top: 16px;">
-            <div>
-              <div class="hero-score" style="color:${contrast}">${scoreLabel}</div>
-              <div class="hero-subtext" style="color:${contrast}; opacity:0.9">Current score</div>
-            </div>
-          </div>
-          ${progressBarHtml}
-          <div class="card-aux" style="color:${contrast}; border-top:1px solid rgba(255,255,255,0.12); margin-top: 20px; padding-top: 14px;">
-            Attendance: <strong style="color:${contrast}">${attendanceLabel}</strong> / MAX POINTS: <strong style="color:${contrast}">${maxPointsLabel}</strong>${medals}
+          ${heroAndProgressHtml}
+          <div class="card-aux" style="color:${contrast}; border-top:1px solid rgba(255,255,255,0.12); margin-top: 16px; padding-top: 14px; display: flex; flex-direction: column; gap: 4px;">
+            <div>Attendance: <strong style="color:${contrast}">${attendanceLabel}</strong></div>
+            ${medals ? `<div>${medals}</div>` : ''}
           </div>
         </div>
       `;
