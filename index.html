@@ -4241,7 +4241,7 @@
         const combinedPlaces = getTeamPlacementsForSim(simPlacesByTeam);
         
         const simLostPoints = { 'TKO': 0, 'NY': 0, 'LA': 0, 'SP': 0 };
-        const PLACE_POINTS = [100, 80, 60, 40, 30, 20];
+        const SIM_PLACE_POINTS = [100, 80, 60, 40, 30, 20];
         
         Object.keys(simGroups).forEach(tName => {
            Object.keys(simGroups[tName]).forEach(ev => {
@@ -4249,7 +4249,7 @@
                let actual = 0;
                const simulatedPlacements = simGroups[tName][ev];
                for (let i = 0; i < Math.min(simulatedPlacements.length, 6); i++) {
-                   theoretical += PLACE_POINTS[i];
+                   theoretical += SIM_PLACE_POINTS[i];
                }
                simulatedPlacements.forEach(pts => actual += pts);
                simLostPoints[tName] += (theoretical - actual);
