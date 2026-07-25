@@ -2144,7 +2144,13 @@
     }
 
     function isClubNameToken(token) {
-      return typeof token === 'string' && /^[A-Z]{2,4}$/.test(token) && token !== 'MAX' && token !== 'ATT' && token !== 'POI' && token !== 'PLACE';
+      if (!token || typeof token !== 'string') return false;
+      const u = token.trim().toUpperCase();
+      if (u.startsWith('TOK') || u.startsWith('TKO') || u === 'TK') return true;
+      if (u.startsWith('NY') || u.includes('NEW')) return true;
+      if (u.startsWith('LA')) return true;
+      if (u.startsWith('SP') || u.includes('SAO')) return true;
+      return /^[A-Z]{2,5}$/.test(u) && u !== 'MAX' && u !== 'ATT' && u !== 'POI' && u !== 'PLACE';
     }
 
     const teamPalettes = {
