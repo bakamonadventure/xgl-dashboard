@@ -3837,6 +3837,7 @@
           avgPoints[name].total += p.points;
           avgPoints[name].count += 1;
         });
+        window.globalAvgPoints = avgPoints;
 
         const nolaData = state.sheetData['NOLAAthlete'];
         if (!nolaData || !nolaData.nolaAthletes) return;
@@ -4004,7 +4005,7 @@
               const sim = window.simState[key];
               let tName = String(ath.team).trim().toUpperCase();
               if (tName === 'TOK' || tName === 'TK' || tName === 'TOKYO') tName = 'TKO';
-              if (sim && sim.points > 0) {
+              if (sim && sim.points > 0 && !sim._predicted) {
                 if (['TKO', 'NY', 'LA', 'SP'].includes(tName)) {
                   state.fixedPtsByTeam[tName] += sim.points;
                 }
@@ -4034,13 +4035,32 @@
               while (pts.length < ds.athletes.length) {
                 pts.push(0);
               }
-              for (let j = pts.length - 1; j > 0; j--) {
-                const k = Math.floor(Math.random() * (j + 1));
-                [pts[j], pts[k]] = [pts[k], pts[j]];
-              }
+              pts.sort((a, b) => b - a);
 
-              for (let a = 0; a < ds.athletes.length; a++) {
-                const ath = ds.athletes[a];
+              let noisedAthletes = ds.athletes.map((ath, idx) => {
+                let baseAvg = 0;
+                const cleanName = ath.name.trim().toLowerCase().replace(/[\(\)]/g, '');
+                const parts = cleanName.split(/\s+/).filter(p => p.length > 2);
+                if (window.globalAvgPoints) {
+                  if (window.globalAvgPoints[cleanName]) {
+                    baseAvg = window.globalAvgPoints[cleanName].total / window.globalAvgPoints[cleanName].count;
+                  } else {
+                    for (const k of Object.keys(window.globalAvgPoints)) {
+                      const cleanK = k.replace(/[\(\)]/g, '');
+                      if (parts.length >= 2 && parts.every(part => cleanK.includes(part))) {
+                        baseAvg = window.globalAvgPoints[k].total / window.globalAvgPoints[k].count;
+                        break;
+                      }
+                    }
+                  }
+                }
+                const noise = (Math.random() - 0.5) * 120;
+                return { ...ath, origIdx: idx, score: baseAvg + noise };
+              });
+              noisedAthletes.sort((a, b) => b.score - a.score);
+
+              for (let a = 0; a < noisedAthletes.length; a++) {
+                const ath = noisedAthletes[a];
                 const awarded = pts[a];
                 if (awarded > 0 && ['TKO', 'NY', 'LA', 'SP'].includes(ath.team)) {
                   simScores[ath.team] += awarded;
@@ -5531,7 +5551,7 @@
 
           if (sim.points === -1 || String(sim.rank) === '-1' || String(sim.rank) === '-2') {
             optAthletes.add(name);
-          } else if (sim.points > 0) {
+          } else if (sim.points > 0 && !sim._predicted) {
             currentStateStr += `- ${name} (${tName}): ${sim.points}pt\n`;
             if (currentOverallScores[tName] !== undefined) {
               currentOverallScores[tName] += sim.points;
