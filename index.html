@@ -2475,9 +2475,13 @@
         
         ['SAC', 'CHIBA', 'NOLA'].forEach(eventKey => {
             if (state.activeSheet !== 'TOTAL' && state.activeSheet !== eventKey) return;
-            
-            const isFinished = (eventKey === 'SAC' || eventKey === 'CHIBA');
-            
+            let isFinished = (eventKey === 'SAC' || eventKey === 'CHIBA');
+            const athleteSheet = state.sheetData[eventKey + 'Athlete'];
+            if (athleteSheet && athleteSheet.rawRows && athleteSheet.rawRows.length > 0) {
+                const a1 = String(athleteSheet.rawRows[0][0]).trim();
+                if (a1 === '1' || a1.toLowerCase() === 'true') isFinished = true;
+                if (a1 === '0' || a1.toLowerCase() === 'false') isFinished = false;
+            }
             let eventMax = 0;
             const eventSheetData = state.sheetData[eventKey];
             if (eventSheetData && eventSheetData.clubs) {
