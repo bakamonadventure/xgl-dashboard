@@ -2471,28 +2471,57 @@
         const totalMax = club.metrics['MAX POINTS'];
         const currentScore = club.score || 0;
         
-        let lostPoints = 0;
-        if (club.placements && club.placements.length > 0) {
-          const pointsMapArray = [100, 80, 60, 40, 30, 20];
-          const groups = {};
-          club.placements.forEach(p => {
-            const key = `${p.sheetKey}_${p.sport}_${p.gender}_${p.eventName}`;
-            if (!groups[key]) groups[key] = [];
-            groups[key].push(p);
-          });
-          Object.values(groups).forEach(group => {
-            let theoreticalMax = 0;
-            let actualPoints = 0;
-            for (let i = 0; i < Math.min(group.length, 6); i++) {
-              theoreticalMax += pointsMapArray[i];
-            }
-            group.forEach(p => { actualPoints += p.points; });
-            lostPoints += (theoreticalMax - actualPoints);
-          });
-        }
+        let remainingPotential = 0;
         
-        const maxPotential = Math.max(currentScore, totalMax - lostPoints);
-        const remainingPotential = Math.max(0, maxPotential - currentScore);
+        ['SAC', 'CHIBA', 'NOLA'].forEach(eventKey => {
+            if (state.activeSheet !== 'TOTAL' && state.activeSheet !== eventKey) return;
+            
+            const isFinished = (eventKey === 'SAC' || eventKey === 'CHIBA');
+            
+            let eventMax = 0;
+            const eventSheetData = state.sheetData[eventKey];
+            if (eventSheetData && eventSheetData.clubs) {
+                const eventClub = eventSheetData.clubs.find(c => c.name === club.name);
+                if (eventClub && eventClub.metrics && eventClub.metrics['MAX POINTS']) {
+                    eventMax = eventClub.metrics['MAX POINTS'];
+                }
+            }
+            
+            let eventScore = 0;
+            if (eventSheetData && eventSheetData.clubs) {
+                const eventClub = eventSheetData.clubs.find(c => c.name === club.name);
+                if (eventClub && eventClub.score) {
+                    eventScore = eventClub.score;
+                }
+            }
+
+            if (!isFinished) {
+                let lostPoints = 0;
+                if (club.placements) {
+                    const eventPlacements = club.placements.filter(p => p.sheetKey === eventKey);
+                    const pointsMapArray = [100, 80, 60, 40, 30, 20];
+                    const groups = {};
+                    eventPlacements.forEach(p => {
+                        const key = `${p.sport}_${p.gender}_${p.eventName}`;
+                        if (!groups[key]) groups[key] = [];
+                        groups[key].push(p);
+                    });
+                    Object.values(groups).forEach(group => {
+                        let theoreticalMax = 0;
+                        let actualPoints = 0;
+                        for (let i = 0; i < Math.min(group.length, 6); i++) {
+                            theoreticalMax += pointsMapArray[i];
+                        }
+                        group.forEach(p => { actualPoints += p.points; });
+                        lostPoints += (theoreticalMax - actualPoints);
+                    });
+                }
+                let eventMaxPotential = Math.max(eventScore, eventMax - lostPoints);
+                remainingPotential += Math.max(0, eventMaxPotential - eventScore);
+            }
+        });
+        
+        const maxPotential = currentScore + remainingPotential;
         
         const currentPct = Math.min(100, (currentScore / totalMax) * 100);
         const remainingPct = Math.min(100, (remainingPotential / totalMax) * 100);
