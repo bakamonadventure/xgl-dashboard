@@ -1767,8 +1767,11 @@
       <div class="grid cards" id="summaryCards" style="margin-bottom: 24px;"></div>
 
       <section class="section" id="detailsSection">
-        <h2 id="detailTitle">Select a sheet</h2>
-        <div class="status" id="detailStatus">Status: <span>Idle</span></div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <h2 id="detailTitle" style="margin-bottom: 0;">Select a sheet</h2>
+          <button id="toggleFinishedBtn" class="btn primary" style="display: none; padding: 6px 14px; font-size: 0.85rem; border-radius: 20px; transition: all 0.2s; background: transparent;"></button>
+        </div>
+        <div class="status" id="detailStatus" style="margin-top: 0;">Status: <span>Idle</span></div>
         <div id="athleteFilters" style="display: none; margin-bottom: 20px;"></div>
         <div class="table-wrap" id="tableContainer"></div>
       </section>
@@ -3389,6 +3392,65 @@
       const filtersDiv = document.getElementById('athleteFilters');
       if (filtersDiv) {
         filtersDiv.style.display = sheetKey === 'Athlete' ? 'flex' : 'none';
+      }
+
+      const toggleBtn = document.getElementById('toggleFinishedBtn');
+      if (['SAC', 'CHIBA', 'NOLA'].includes(sheetKey)) {
+        toggleBtn.style.display = 'inline-block';
+        
+        let isFinished = (sheetKey === 'SAC' || sheetKey === 'CHIBA');
+        const athleteSheet = state.sheetData[sheetKey + 'Athlete'];
+        if (athleteSheet && athleteSheet.rawRows && athleteSheet.rawRows.length > 0) {
+            const a1 = String(athleteSheet.rawRows[0][0]).trim();
+            if (a1 === '1' || a1.toLowerCase() === 'true') isFinished = true;
+            if (a1 === '0' || a1.toLowerCase() === 'false') isFinished = false;
+        }
+
+        if (isFinished) {
+            toggleBtn.innerHTML = '🏁 Finished';
+            toggleBtn.style.background = 'rgba(74, 222, 128, 0.15)';
+            toggleBtn.style.color = '#4ade80';
+            toggleBtn.style.border = '1px solid rgba(74, 222, 128, 0.4)';
+        } else {
+            toggleBtn.innerHTML = '⏳ Ongoing';
+            toggleBtn.style.background = 'transparent';
+            toggleBtn.style.color = '#cbd5e1';
+            toggleBtn.style.border = '1px solid rgba(255,255,255,0.2)';
+        }
+
+        toggleBtn.onclick = async () => {
+            const url = localStorage.getItem('xcl_apps_script_url') || APPS_SCRIPT_URL;
+            if (!url) {
+                alert('No Apps Script URL configured!');
+                return;
+            }
+            const targetVal = isFinished ? '0' : '1';
+            if (!confirm(`Are you sure you want to mark this tournament as ${targetVal === '1' ? 'FINISHED' : 'ONGOING'}?`)) return;
+
+            toggleBtn.innerHTML = 'Updating...';
+            toggleBtn.disabled = true;
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({
+                        sheet: sheetKey + 'Athlete',
+                        updates: [{ row: 1, col: 1, value: targetVal }]
+                    })
+                });
+                const json = await res.json();
+                if (!json.success) throw new Error(json.error || 'Unknown error');
+                
+                alert(`Successfully updated!\\nPlease wait up to 5 minutes for Google Sheets CSV cache to clear, then refresh data.`);
+            } catch (err) {
+                alert('Error updating: ' + err.message);
+            } finally {
+                toggleBtn.disabled = false;
+                renderSheetDetails();
+            }
+        };
+      } else {
+        toggleBtn.style.display = 'none';
       }
 
       if (sheetKey === 'ScoreEntry') {
