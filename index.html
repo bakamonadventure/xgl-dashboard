@@ -4216,15 +4216,16 @@
           
           if (simAdditions[tName] !== undefined) {
             simAdditions[tName] += sim.points > 0 ? sim.points : 0;
+            const rankStr = sim.rank || String(sim.place || '');
             if (sim.points > 0) { // Valid top 6 placement
                // rankStr is like '100', '80', '60'... Convert to place (1-6)
                const ptsToPlace = { '100': 1, '80': 2, '60': 3, '40': 4, '30': 5, '20': 6 };
-               const place = ptsToPlace[sim.rank] || parseInt(sim.rank, 10);
+               const place = ptsToPlace[rankStr] || parseInt(rankStr, 10) || sim.place;
                if (place >= 1 && place <= 12) {
                  simPlacesByTeam[tName].push(place);
                }
-            } else if (sim.rank.endsWith('th')) { // 7th-12th
-               const place = parseInt(sim.rank, 10);
+            } else if (rankStr.endsWith('th')) { // 7th-12th
+               const place = parseInt(rankStr, 10);
                if (place >= 1 && place <= 12) {
                  simPlacesByTeam[tName].push(place);
                }
