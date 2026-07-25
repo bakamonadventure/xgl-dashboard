@@ -2434,50 +2434,17 @@
       return i + "th";
     }
 
-    function buildClubCard(club) {
-      const palette = club.palette || getTeamPalette(club.name);
-      const contrast = (palette.text || getContrastColor(palette.primary));
-      const rankBadge = club.rank ? `<span style="background: rgba(255, 255, 255, 0.22); color: ${contrast}; padding: 4px 10px; border-radius: 10px; font-size: 0.78rem; font-weight: 800; letter-spacing: normal; text-transform: none; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">${getOrdinalSuffix(club.rank)}</span>` : '';
-
-      const headerHtml = `
-        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-          <h2 style="color:${contrast}; margin: 0;">${club.name}</h2>
-          ${rankBadge}
-        </div>
-      `;
-
-      if (club.athletes) {
-        const athleteCount = club.athletes.length;
-        const previewNames = club.athletes.slice(0, 3).join(', ');
-        const moreLabel = athleteCount > 3 ? ` +${athleteCount - 3} more` : '';
-        return `
-          <div class="card" style="background:${palette.primary}; color:${contrast}; border: none;">
-            ${headerHtml}
-            <div class="club-subtitle" style="color:${contrast}; opacity:0.9; margin-top: 6px;">Club athletes</div>
-            <div class="card-hero" style="background:transparent; color:${contrast}">
-              <div>
-                <div class="hero-score" style="color:${contrast}">${athleteCount}</div>
-                <div class="hero-subtext" style="color:${contrast}; opacity:0.9">Athletes</div>
-              </div>
-            </div>
-            <div class="card-aux" style="color:${contrast}; border-top:1px solid rgba(255,255,255,0.12)">${previewNames}${moreLabel}</div>
-          </div>
-        `;
-      }
-
-      const scoreLabel = club.score !== null && club.score !== undefined ? club.score.toLocaleString('ja-JP') : '—';
-      const attendanceLabel = club.metrics?.Attendance != null ? club.metrics.Attendance.toLocaleString('ja-JP') : '—';
-      const medals = club.medalsHtml ? ` <br><div style="margin-top: 4px;">Medals: ${club.medalsHtml}</div>` : '';
-      
-      let heroAndProgressHtml = '';
-      if (club.score !== null && club.metrics?.['MAX POINTS']) {
+    function calculateMaxPotential(club, activeSheet) {
+        if (club.score === null || club.score === undefined || !club.metrics?.['MAX POINTS']) return null;
+        
         const totalMax = club.metrics['MAX POINTS'];
         const currentScore = club.score || 0;
         
         let remainingPotential = 0;
         
         ['SAC', 'CHIBA', 'NOLA'].forEach(eventKey => {
-            if (state.activeSheet !== 'TOTAL' && state.activeSheet !== eventKey) return;
+            if (activeSheet !== 'TOTAL' && activeSheet !== eventKey) return;
+            
             let isFinished = (eventKey === 'SAC' || eventKey === 'CHIBA');
             const athleteSheet = state.sheetData[eventKey + 'Athlete'];
             if (athleteSheet && athleteSheet.rawRows && athleteSheet.rawRows.length > 0) {
@@ -2485,6 +2452,7 @@
                 if (a1 === '1' || a1.toLowerCase() === 'true') isFinished = true;
                 if (a1 === '0' || a1.toLowerCase() === 'false') isFinished = false;
             }
+            
             let eventMax = 0;
             const eventSheetData = state.sheetData[eventKey];
             if (eventSheetData && eventSheetData.clubs) {
@@ -2529,6 +2497,49 @@
         });
         
         const maxPotential = currentScore + remainingPotential;
+        return { totalMax, currentScore, remainingPotential, maxPotential };
+    }
+
+    function buildClubCard(club) {
+      const palette = club.palette || getTeamPalette(club.name);
+      const contrast = (palette.text || getContrastColor(palette.primary));
+      const rankBadge = club.rank ? `<span style="background: rgba(255, 255, 255, 0.22); color: ${contrast}; padding: 4px 10px; border-radius: 10px; font-size: 0.78rem; font-weight: 800; letter-spacing: normal; text-transform: none; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">${getOrdinalSuffix(club.rank)}</span>` : '';
+
+      const headerHtml = `
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+          <h2 style="color:${contrast}; margin: 0;">${club.name}</h2>
+          ${rankBadge}
+        </div>
+      `;
+
+      if (club.athletes) {
+        const athleteCount = club.athletes.length;
+        const previewNames = club.athletes.slice(0, 3).join(', ');
+        const moreLabel = athleteCount > 3 ? ` +${athleteCount - 3} more` : '';
+        return `
+          <div class="card" style="background:${palette.primary}; color:${contrast}; border: none;">
+            ${headerHtml}
+            <div class="club-subtitle" style="color:${contrast}; opacity:0.9; margin-top: 6px;">Club athletes</div>
+            <div class="card-hero" style="background:transparent; color:${contrast}">
+              <div>
+                <div class="hero-score" style="color:${contrast}">${athleteCount}</div>
+                <div class="hero-subtext" style="color:${contrast}; opacity:0.9">Athletes</div>
+              </div>
+            </div>
+            <div class="card-aux" style="color:${contrast}; border-top:1px solid rgba(255,255,255,0.12)">${previewNames}${moreLabel}</div>
+          </div>
+        `;
+      }
+
+      const scoreLabel = club.score !== null && club.score !== undefined ? club.score.toLocaleString('ja-JP') : '—';
+      const attendanceLabel = club.metrics?.Attendance != null ? club.metrics.Attendance.toLocaleString('ja-JP') : '—';
+      const medals = club.medalsHtml ? ` <br><div style="margin-top: 4px;">Medals: ${club.medalsHtml}</div>` : '';
+      
+      let heroAndProgressHtml = '';
+      const pot = calculateMaxPotential(club, state.activeSheet);
+      
+      if (pot) {
+        const { totalMax, currentScore, remainingPotential, maxPotential } = pot;
         
         const currentPct = Math.min(100, (currentScore / totalMax) * 100);
         const remainingPct = Math.min(100, (remainingPotential / totalMax) * 100);
@@ -3752,6 +3763,8 @@
 
       const totalData = state.sheetData['TOTAL'];
       const baseTeams = { 'TKO': 0, 'NY': 0, 'LA': 0, 'SP': 0 };
+      const baseMaxPotentials = { 'TKO': 0, 'NY': 0, 'LA': 0, 'SP': 0 };
+      
       window.baseTeams = baseTeams;
       if (totalData && totalData.clubs) {
         totalData.clubs.forEach(c => {
@@ -3759,6 +3772,10 @@
           if (tName === 'TOK') tName = 'TKO';
           if (baseTeams[tName] !== undefined && c.score !== null) {
             baseTeams[tName] = c.score;
+            const pot = calculateMaxPotential(c, 'TOTAL');
+            if (pot) {
+              baseMaxPotentials[tName] = pot.maxPotential;
+            }
           }
         });
       }
@@ -4188,25 +4205,63 @@
       function renderContent() {
         const simAdditions = { 'TKO': 0, 'NY': 0, 'LA': 0, 'SP': 0 };
         const simPlacesByTeam = { 'TKO': [], 'NY': [], 'LA': [], 'SP': [] };
-        Object.values(window.simState).forEach(sim => {
+        
+        // Group simulated placements by event for lost points calc
+        const simGroups = {};
+        
+        Object.keys(window.simState).forEach(key => {
+          const sim = window.simState[key];
           let tName = String(sim.team).trim().toUpperCase();
           if (tName === 'TOK' || tName === 'TK' || tName === 'TOKYO') tName = 'TKO';
+          
           if (simAdditions[tName] !== undefined) {
             simAdditions[tName] += sim.points > 0 ? sim.points : 0;
-            if (sim.place >= 1 && sim.place <= 12) {
-                simPlacesByTeam[tName].push(sim.place);
+            if (sim.points > 0) { // Valid top 6 placement
+               // rankStr is like '100', '80', '60'... Convert to place (1-6)
+               const ptsToPlace = { '100': 1, '80': 2, '60': 3, '40': 4, '30': 5, '20': 6 };
+               const place = ptsToPlace[sim.rank] || parseInt(sim.rank, 10);
+               if (place >= 1 && place <= 12) {
+                 simPlacesByTeam[tName].push(place);
+               }
+            } else if (sim.rank.endsWith('th')) { // 7th-12th
+               const place = parseInt(sim.rank, 10);
+               if (place >= 1 && place <= 12) {
+                 simPlacesByTeam[tName].push(place);
+               }
             }
+            
+            const eventKey = key.split('-')[0]; // Extracted discipline title
+            if (!simGroups[tName]) simGroups[tName] = {};
+            if (!simGroups[tName][eventKey]) simGroups[tName][eventKey] = [];
+            simGroups[tName][eventKey].push(sim.points > 0 ? sim.points : 0);
           }
         });
 
         const combinedPlaces = getTeamPlacementsForSim(simPlacesByTeam);
+        
+        const simLostPoints = { 'TKO': 0, 'NY': 0, 'LA': 0, 'SP': 0 };
+        const PLACE_POINTS = [100, 80, 60, 40, 30, 20];
+        
+        Object.keys(simGroups).forEach(tName => {
+           Object.keys(simGroups[tName]).forEach(ev => {
+               let theoretical = 0;
+               let actual = 0;
+               const simulatedPlacements = simGroups[tName][ev];
+               for (let i = 0; i < Math.min(simulatedPlacements.length, 6); i++) {
+                   theoretical += PLACE_POINTS[i];
+               }
+               simulatedPlacements.forEach(pts => actual += pts);
+               simLostPoints[tName] += (theoretical - actual);
+           });
+        });
 
         const leaderboard = Object.keys(baseTeams).map(tName => ({
           name: tName,
           base: baseTeams[tName],
           sim: simAdditions[tName],
           total: baseTeams[tName] + simAdditions[tName],
-          places: combinedPlaces[tName]
+          places: combinedPlaces[tName],
+          maxPot: (baseMaxPotentials[tName] || 0) - (simLostPoints[tName] || 0)
         })).sort((a, b) => {
            if (b.total !== a.total) return b.total - a.total;
            for (let i = 1; i <= 12; i++) {
@@ -4261,12 +4316,15 @@
           const palette = getTeamPalette(team.name);
           const contrast = (palette.text || getContrastColor(palette.primary));
           html += `
-                <div class="sim-leaderboard-card" style="background: ${palette.primary}; color: ${contrast};">
+                <div class="sim-leaderboard-card" style="background: ${palette.primary}; color: ${contrast}; position: relative; overflow: hidden;">
                   <div class="sim-leaderboard-header">
                     ${team.name} <span class="sim-leaderboard-badge">${getOrdinalSuffix(index + 1)}</span>
                   </div>
                   <div class="sim-leaderboard-score">${team.total.toLocaleString()}</div>
                   <div class="sim-leaderboard-details">${window.t('base')} ${team.base.toLocaleString()} <br>${window.t('simulated')} +${team.sim.toLocaleString()}</div>
+                  <div style="margin-top: 12px; font-size: 0.8rem; opacity: 0.85; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 8px;">
+                    Sim Max Potential: <strong>${team.maxPot.toLocaleString()}</strong>
+                  </div>
                 </div>
           `;
         });
