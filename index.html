@@ -4764,7 +4764,20 @@
           const clubEntries = { 'NY': 0, 'LA': 0, 'SP': 0, 'TKO': 0 };
           const clubMaxPoints = { 'NY': 0, 'LA': 0, 'SP': 0, 'TKO': 0 };
 
-          for (let c = 2; c < 40; c += 4) { 
+          const nameColumns = [];
+          for (let r = 0; r < Math.min(4, athleteSheet.rawRows.length); r++) {
+            const row = athleteSheet.rawRows[r];
+            if (!row) continue;
+            for (let col = 0; col < row.length; col++) {
+              if (String(row[col]).trim() === '1') {
+                if (!nameColumns.includes(col + 1)) {
+                  nameColumns.push(col + 1);
+                }
+              }
+            }
+          }
+
+          nameColumns.forEach(c => { 
             let eventEntries = { 'NY': 0, 'LA': 0, 'SP': 0, 'TKO': 0 };
             for (let r = 0; r < athleteSheet.rawRows.length; r++) {
                const row = athleteSheet.rawRows[r];
@@ -4792,7 +4805,7 @@
                   }
                }
             });
-          }
+          });
 
           scoreSheet.clubs.forEach(club => {
              const cname = club.name === 'TK' ? 'TKO' : club.name;
