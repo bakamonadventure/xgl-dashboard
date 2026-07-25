@@ -2466,16 +2466,65 @@
       const attendanceLabel = club.metrics?.Attendance != null ? club.metrics.Attendance.toLocaleString('ja-JP') : '—';
       const maxPointsLabel = club.metrics?.['MAX POINTS'] != null ? club.metrics['MAX POINTS'].toLocaleString('ja-JP') : '—';
       const medals = club.medalsHtml ? ` <br><div style="margin-top: 4px;">Medals: ${club.medalsHtml}</div>` : '';
+      
+      let progressBarHtml = '';
+      if (club.score !== null && club.metrics?.['MAX POINTS']) {
+        const totalMax = club.metrics['MAX POINTS'];
+        const currentScore = club.score || 0;
+        
+        let lostPoints = 0;
+        if (club.placements && club.placements.length > 0) {
+          const pointsMapArray = [100, 80, 60, 40, 30, 20];
+          const groups = {};
+          club.placements.forEach(p => {
+            const key = `${p.sheetKey}_${p.sport}_${p.gender}_${p.eventName}`;
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(p);
+          });
+          Object.values(groups).forEach(group => {
+            let theoreticalMax = 0;
+            let actualPoints = 0;
+            for (let i = 0; i < Math.min(group.length, 6); i++) {
+              theoreticalMax += pointsMapArray[i];
+            }
+            group.forEach(p => { actualPoints += p.points; });
+            lostPoints += (theoreticalMax - actualPoints);
+          });
+        }
+        
+        const maxPotential = Math.max(currentScore, totalMax - lostPoints);
+        const remainingPotential = Math.max(0, maxPotential - currentScore);
+        
+        const currentPct = Math.min(100, (currentScore / totalMax) * 100);
+        const remainingPct = Math.min(100, (remainingPotential / totalMax) * 100);
+        
+        progressBarHtml = `
+          <div style="margin-top: 16px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 6px; opacity: 0.9; font-family: var(--number-font);">
+              <span style="font-weight:700;">${currentScore} pts</span>
+              <span>Max Potential: <strong style="color:${contrast}">${maxPotential}</strong> / ${totalMax}</span>
+            </div>
+            <div style="width: 100%; height: 10px; background: rgba(0,0,0,0.4); border-radius: 5px; overflow: hidden; display: flex; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);">
+              <div style="width: ${currentPct}%; background: ${contrast}; transition: width 0.5s ease-out;"></div>
+              <div style="width: ${remainingPct}%; background: repeating-linear-gradient(45deg, transparent, transparent 4px, ${contrast} 4px, ${contrast} 8px); opacity: 0.4; transition: width 0.5s ease-out;"></div>
+            </div>
+          </div>
+        `;
+      }
+
       return `
         <div class="card" style="background:${palette.primary}; color:${contrast}; border: none;">
           ${headerHtml}
-          <div class="card-hero" style="background:transparent; color:${contrast}">
+          <div class="card-hero" style="background:transparent; color:${contrast}; margin-top: 16px;">
             <div>
               <div class="hero-score" style="color:${contrast}">${scoreLabel}</div>
               <div class="hero-subtext" style="color:${contrast}; opacity:0.9">Current score</div>
             </div>
           </div>
-          <div class="card-aux" style="color:${contrast}; border-top:1px solid rgba(255,255,255,0.12)">Attendance: <strong style="color:${contrast}">${attendanceLabel}</strong> / MAX POINTS: <strong style="color:${contrast}">${maxPointsLabel}</strong>${medals}</div>
+          ${progressBarHtml}
+          <div class="card-aux" style="color:${contrast}; border-top:1px solid rgba(255,255,255,0.12); margin-top: 20px; padding-top: 14px;">
+            Attendance: <strong style="color:${contrast}">${attendanceLabel}</strong> / MAX POINTS: <strong style="color:${contrast}">${maxPointsLabel}</strong>${medals}
+          </div>
         </div>
       `;
     }
@@ -2752,25 +2801,76 @@
       return placements;
     }
 
-    function getAthleteTeamForEvent(athleteName, sheetKey) {
+    function getAthleteTeamForEvent(athleteName, sheetKey, eventName = '') {
       const athleteSheet = state.sheetData[sheetKey + 'Athlete'];
       if (!athleteSheet || !athleteSheet.rawRows) return null;
       const name = athleteName.trim().toLowerCase();
+      
+      let bestTeam = null;
       
       for (let r = 0; r < athleteSheet.rawRows.length; r++) {
         const row = athleteSheet.rawRows[r];
         for (let c = 0; c < row.length; c++) {
           if (row[c] && row[c].trim().toLowerCase() === name) {
-            if (c + 1 < row.length && row[c+1]) {
-               const team = row[c+1].trim();
-               if (isClubNameToken(team)) {
-                  return team;
+            const team = (c + 1 < row.length && row[c+1]) ? row[c+1].trim() : '';
+            
+            if (!eventName) {
+               if (isClubNameToken(team)) return team;
+               continue;
+            }
+            
+            let headerStr = '';
+            for (let rScan = r - 1; rScan >= 0; rScan--) {
+              const cell = athleteSheet.rawRows[rScan][c];
+              if (cell && typeof cell === 'string' && cell.trim().length > 2) {
+                if (cell.toLowerCase().match(/\b(skb|bmx|park|street|dirt|vert|trick|st|stbt|pkbt|bt)\b/i)) {
+                   headerStr = cell;
+                   break;
+                }
+              }
+            }
+            
+            let isMatch = false;
+            const eLow = eventName.toLowerCase();
+            const hLow = headerStr.toLowerCase();
+            
+            const getTokens = (str) => {
+              const tokens = [];
+              if (str.includes('park')) tokens.push('park');
+              if (str.includes('street') || str.match(/\bst\b/)) tokens.push('street');
+              if (str.includes('dirt')) tokens.push('dirt');
+              if (str.includes('vert')) tokens.push('vert');
+              if (str.includes('best trick') || str.match(/\b(stbt|pkbt|bt)\b/) || str.includes('trick')) tokens.push('bt');
+              return tokens;
+            };
+            
+            const eTokens = getTokens(eLow);
+            const hTokens = getTokens(hLow);
+            
+            if (eTokens.length > 0 && hTokens.length > 0) {
+               const eHasBt = eTokens.includes('bt');
+               const hHasBt = hTokens.includes('bt');
+               if (eHasBt === hHasBt) {
+                 const eCore = eTokens.filter(t => t !== 'bt');
+                 const hCore = hTokens.filter(t => t !== 'bt');
+                 if (eCore.length === 0 || hCore.length === 0 || eCore.some(t => hCore.includes(t))) {
+                   isMatch = true;
+                 }
                }
+            } else {
+               isMatch = true;
+            }
+            
+            if (isMatch) {
+               if (isClubNameToken(team)) return team;
+               return null;
+            } else {
+               if (isClubNameToken(team) && !bestTeam) bestTeam = team;
             }
           }
         }
       }
-      return null;
+      return isClubNameToken(bestTeam) ? bestTeam : null;
     }
 
     function getCanonicalClub(teamName) {
@@ -2804,7 +2904,7 @@
         if (s.includes('park')) d.push('Park');
         if (s.includes('dirt')) d.push('Dirt');
         if (s.includes('vert')) d.push('Vert');
-        if (s.includes('best trick') || s.match(/\bstbt\b/) || s.match(/\bbt\b/) || s.includes('trick')) d.push('Best Trick');
+        if (s.includes('best trick') || s.match(/\bstbt\b/) || s.match(/\bpkbt\b/) || s.match(/\bbt\b/) || s.includes('trick')) d.push('Best Trick');
         return d;
       }
 
@@ -2826,10 +2926,21 @@
                    }
                    if (athleteName.length < 3 || athleteName.length > 40) continue;
 
-                   const team = (c + 1 < row.length && row[c+1]) ? String(row[c+1]).trim() : '';
-                   const canonicalClub = isClubNameToken(team) ? getCanonicalClub(team) : 'FA';
+                   let headerStr = '';
+                   for (let rScan = r - 1; rScan >= 0; rScan--) {
+                     const cell = athleteSheet.rawRows[rScan][c];
+                     if (cell && typeof cell === 'string' && cell.trim().length > 2) {
+                       if (cell.toLowerCase().match(/\b(skb|bmx|park|street|dirt|vert|trick|st|stbt|pkbt|bt)\b/i)) {
+                          headerStr = cell;
+                          break;
+                       }
+                     }
+                   }
 
+                   let team = (c + 1 < row.length && row[c+1]) ? String(row[c+1]).trim() : '';
                    const nameKey = athleteName.toLowerCase();
+                   
+                   const canonicalClub = isClubNameToken(team) ? getCanonicalClub(team) : 'FA';
                    const compositeKey = nameKey + '_' + canonicalClub;
                    
                    if (!athleteClubMap.has(compositeKey)) {
@@ -2843,17 +2954,6 @@
                       });
                    }
                    
-                   // Attempt to find the event header for this column to extract disciplines
-                   let headerStr = '';
-                   for (let rScan = r - 1; rScan >= 0; rScan--) {
-                     const cell = athleteSheet.rawRows[rScan][c];
-                     if (cell && typeof cell === 'string' && cell.trim().length > 2) {
-                       if (cell.toLowerCase().match(/\b(skb|bmx|park|street|dirt|vert|trick|st|stbt|bt)\b/i)) {
-                          headerStr = cell;
-                          break;
-                       }
-                     }
-                   }
                    if (headerStr) {
                      extractDisciplines(headerStr).forEach(d => athleteClubMap.get(compositeKey).disciplines.add(d));
                      const s = headerStr.toLowerCase();
@@ -2872,7 +2972,7 @@
       const placementsByComposite = {};
       allPlacements.forEach(p => {
         const nameKey = p.athleteName.trim().toLowerCase();
-        const teamForEvent = getAthleteTeamForEvent(p.athleteName, p.sheetKey);
+        const teamForEvent = getAthleteTeamForEvent(p.athleteName, p.sheetKey, p.eventName);
         const canonicalClub = teamForEvent ? getCanonicalClub(teamForEvent) : 'FA';
         const compositeKey = nameKey + '_' + canonicalClub;
 
@@ -3466,6 +3566,8 @@
               let teamStr = (rawRows[i].length > tCol) ? normalizeCell(rawRows[i][tCol]) : '';
               if (athleteName.toUpperCase().includes('#REF')) continue;
               if (teamStr.toUpperCase().includes('#REF')) teamStr = '';
+
+              // (Exceptions removed: now relies solely on spreadsheet team values)
 
               if (!athletes.some(a => a.name.toLowerCase() === athleteName.toLowerCase())) {
                 athletes.push({ name: athleteName, team: teamStr });
@@ -4671,7 +4773,8 @@
                const lowerName = athleteName.toLowerCase();
                if (lowerName === '' || lowerName.includes('x games') || lowerName.includes('athlete list') || lowerName.includes('free agent') || lowerName.match(/\b(skb|bmx|park|street|dirt|vert)\b/)) continue;
                if (athleteName.length < 3 || athleteName.length > 40) continue;
-               const teamRaw = (c + 1 < row.length && row[c+1]) ? String(row[c+1]).trim() : '';
+               let teamRaw = (c + 1 < row.length && row[c+1]) ? String(row[c+1]).trim() : '';
+
                let canonical = getCanonicalClub(teamRaw);
                if (canonical === 'TK') canonical = 'TKO';
                if (eventEntries[canonical] !== undefined) {
