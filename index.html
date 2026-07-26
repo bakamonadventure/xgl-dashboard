@@ -2477,6 +2477,15 @@
             }
 
             if (!isFinished) {
+                // If this is NOLA, use the true dynamic max potential calculation
+                if (eventKey === 'NOLA' && typeof window.getNolaDynamicMaxPot === 'function') {
+                    const dynPot = window.getNolaDynamicMaxPot(club.name);
+                    if (dynPot !== null) {
+                        remainingPotential += dynPot;
+                        return; // skip the old inaccurate logic
+                    }
+                }
+                
                 let lostPoints = 0;
                 if (club.placements) {
                     const eventPlacements = club.placements.filter(p => p.sheetKey === eventKey);
@@ -2505,6 +2514,51 @@
         const maxPotential = currentScore + remainingPotential;
         return { totalMax, currentScore, remainingPotential, maxPotential };
     }
+    
+    // Global helper to calculate true dynamic remaining potential for NOLA
+    window.getNolaDynamicMaxPot = function(teamName) {
+        if (!window.state || !window.state.sheetData || !window.state.sheetData.nolaAthletes) return null;
+        
+        const canonical = getCanonicalClub(teamName);
+        let remainingPot = 0;
+        const PLACE_PTS = [100, 80, 60, 40, 30, 20];
+        
+        window.state.sheetData.nolaAthletes.forEach(disc => {
+            const consumedRanks = [];
+            let teamUnsimCount = 0;
+            
+            disc.athletes.forEach(a => {
+                let tName = getCanonicalClub(a.team);
+                if (tName === 'TK') tName = 'TKO';
+                
+                const key = `${disc.title}-${a.name}`.replace(/[^a-zA-Z0-9]/g, '');
+                const sim = window.simState && window.simState[key];
+                
+                if (sim && sim.rank !== '-1' && sim.points >= 0 && (sim.points > 0 || sim.rank !== '0')) {
+                    if (sim.points > 0) {
+                        consumedRanks.push(sim.points);
+                    }
+                } else {
+                    if (tName === canonical && (!sim || sim.rank !== '-1')) {
+                        teamUnsimCount++;
+                    }
+                }
+            });
+            
+            const availablePts = [...PLACE_PTS];
+            consumedRanks.forEach(pts => {
+                const idx = availablePts.indexOf(pts);
+                if (idx !== -1) availablePts.splice(idx, 1);
+            });
+            availablePts.sort((a,b) => b - a);
+            
+            for (let i = 0; i < Math.min(teamUnsimCount, availablePts.length); i++) {
+                remainingPot += availablePts[i];
+            }
+        });
+        
+        return remainingPot;
+    };
 
     function buildClubCard(club) {
       const palette = club.palette || getTeamPalette(club.name);
@@ -4347,11 +4401,7 @@
           if (tName === 'TOK' || tName === 'TK' || tName === 'TOKYO') tName = 'TKO';
           
           if (simAdditions[tName] !== undefined) {
-            if (sim._actual) {
-              if (baseTeams[tName] !== undefined) {
-                baseTeams[tName] += sim.points > 0 ? sim.points : 0;
-              }
-            } else {
+            if (!sim._actual) {
               simAdditions[tName] += sim.points > 0 ? sim.points : 0;
             }
             const rankStr = sim.rank || String(sim.place || '');
@@ -4382,50 +4432,11 @@
         const PLACE_PTS = [100, 80, 60, 40, 30, 20];
         
         if (window.state && window.state.sheetData && window.state.sheetData.nolaAthletes) {
-           window.state.sheetData.nolaAthletes.forEach(disc => {
-              const consumedRanks = [];
-              const teamSimulatedPts = { 'TKO': 0, 'NY': 0, 'LA': 0, 'SP': 0 };
-              const teamUnsimulatedCounts = { 'TKO': 0, 'NY': 0, 'LA': 0, 'SP': 0 };
-
-              disc.athletes.forEach(a => {
-                 let tName = String(a.team || '').trim().toUpperCase();
-                 if (tName === 'TOK' || tName === 'TK' || tName === 'TOKYO') tName = 'TKO';
-                 if (tName.startsWith('NY') || tName.includes('NEW')) tName = 'NY';
-                 if (tName.startsWith('LA')) tName = 'LA';
-                 if (tName.startsWith('SP') || tName.includes('SAO')) tName = 'SP';
-
-                 const key = `${disc.title}-${a.name}`.replace(/[^a-zA-Z0-9]/g, '');
-                 const sim = window.simState && window.simState[key];
-                 
-                 if (sim && sim.rank !== '-1' && sim.points >= 0 && (sim.points > 0 || sim.rank !== '0')) {
-                    if (sim.points > 0) {
-                       consumedRanks.push(sim.points);
-                       if (!sim._actual && teamSimulatedPts[tName] !== undefined) {
-                          teamSimulatedPts[tName] += sim.points;
-                       }
-                    }
-                 } else {
-                    if (teamUnsimulatedCounts[tName] !== undefined && (!sim || sim.rank !== '-1')) {
-                       teamUnsimulatedCounts[tName]++;
-                    }
-                 }
-              });
-
-              const availablePts = [...PLACE_PTS];
-              consumedRanks.forEach(pts => {
-                 const idx = availablePts.indexOf(pts);
-                 if (idx !== -1) availablePts.splice(idx, 1);
-              });
-              availablePts.sort((a,b) => b - a);
-
-              ['TKO', 'NY', 'LA', 'SP'].forEach(t => {
-                 let pot = teamSimulatedPts[t];
-                 let count = teamUnsimulatedCounts[t];
-                 for (let i = 0; i < Math.min(count, availablePts.length); i++) {
-                    pot += availablePts[i];
-                 }
-                 dynamicMaxPot[t] += pot;
-              });
+           ['TKO', 'NY', 'LA', 'SP'].forEach(t => {
+               // Use the shared global helper for unsimulated max potential
+               const pot = typeof window.getNolaDynamicMaxPot === 'function' ? window.getNolaDynamicMaxPot(t) : 0;
+               // Add the simulated points that are already tracked in simAdditions
+               dynamicMaxPot[t] += pot + simAdditions[t];
            });
         }
 
@@ -5096,73 +5107,8 @@
         state.sheetData[result.key] = result.data;
       });
 
-      // --- Dynamic Attendance and MAX POINTS Calculation ---
-      try {
-        const eventSheets = ['SAC', 'CHIBA', 'NOLA'];
-        eventSheets.forEach(key => {
-          const athleteSheet = state.sheetData[key + 'Athlete'];
-          const scoreSheet = state.sheetData[key];
-          if (!athleteSheet || !athleteSheet.rawRows || !scoreSheet || !scoreSheet.clubs) return;
-
-          const clubEntries = { 'NY': 0, 'LA': 0, 'SP': 0, 'TKO': 0 };
-          const clubMaxPoints = { 'NY': 0, 'LA': 0, 'SP': 0, 'TKO': 0 };
-
-          const nameColumns = [];
-          for (let r = 0; r < Math.min(4, athleteSheet.rawRows.length); r++) {
-            const row = athleteSheet.rawRows[r];
-            if (!row) continue;
-            for (let col = 0; col < row.length; col++) {
-              if (String(row[col]).trim() === '1') {
-                if (!nameColumns.includes(col + 1)) {
-                  nameColumns.push(col + 1);
-                }
-              }
-            }
-          }
-
-          nameColumns.forEach(c => { 
-            let eventEntries = { 'NY': 0, 'LA': 0, 'SP': 0, 'TKO': 0 };
-            for (let r = 0; r < athleteSheet.rawRows.length; r++) {
-               const row = athleteSheet.rawRows[r];
-               if (!row) continue;
-               const athleteName = row[c] ? String(row[c]).trim() : '';
-               const lowerName = athleteName.toLowerCase();
-               if (lowerName === '' || lowerName.includes('x games') || lowerName.includes('athlete list') || lowerName.includes('free agent') || lowerName.match(/\b(skb|bmx|park|street|dirt|vert)\b/)) continue;
-               if (athleteName.length < 3 || athleteName.length > 40) continue;
-               let teamRaw = (c + 1 < row.length && row[c+1]) ? String(row[c+1]).trim() : '';
-
-               let canonical = getCanonicalClub(teamRaw);
-               if (canonical === 'TK') canonical = 'TKO';
-               if (eventEntries[canonical] !== undefined) {
-                  eventEntries[canonical]++;
-               }
-            }
-            
-            const PLACE_POINTS = [100, 80, 60, 40, 30, 20];
-            Object.keys(eventEntries).forEach(team => {
-               const count = eventEntries[team];
-               if (count > 0) {
-                  clubEntries[team] += count;
-                  for(let i = 0; i < Math.min(count, 6); i++) {
-                     clubMaxPoints[team] += PLACE_POINTS[i];
-                  }
-               }
-            });
-          });
-
-          scoreSheet.clubs.forEach(club => {
-             const cname = club.name === 'TK' ? 'TKO' : club.name;
-             if (clubEntries[cname] !== undefined && clubEntries[cname] > 0) {
-                club.metrics = club.metrics || {};
-                club.metrics.Attendance = clubEntries[cname];
-                club.metrics['MAX POINTS'] = clubMaxPoints[cname];
-             }
-          });
-        });
-      } catch (err) {
-        console.error("Dynamic calculation failed", err);
-      }
-      // ----------------------------------------------------
+      // Removed flawed dynamic Attendance/MAX POINTS calculation that couldn't handle vertically stacked disciplines.
+      // We now rely on the official MAX POINTS from the spreadsheet and the true 2D parser (parseNolaFocusData).
 
       renderSummary();
       renderSheetDetails();
