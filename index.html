@@ -1795,9 +1795,9 @@
         'nextRefresh': 'Next refresh:',
         'status': 'Status:',
         'nolaSimulator': 'NOLA Simulator',
-        'clinchTrackerTitle': '🏁 TKO Clinch Tracker (Entering Final Event)',
+        'clinchTrackerTitle': '🏁 TKO Clinch Tracker',
         'raceTitle': 'Team Predictions',
-        'clinchTrackerDesc': 'TKO has no athletes in the final event (BMX Dirt BT). To mathematically secure victory before it starts, TKO needs to build an insurmountable lead.',
+        'clinchTrackerDesc': 'Points TKO needs to secure the championship against each rival (Assumes rivals earn max possible points in all unsimulated events).',
         'safe': 'SAFE! (Clinched)',
         'needsMore': 'Needs {pt} more points',
         'finalEventMax': 'Final Event Max: +{pt}pt (Target Lead: {tgt}pt)',
@@ -1907,12 +1907,12 @@
         'nextRefresh': '次回の更新:',
         'status': 'ステータス:',
         'nolaSimulator': 'NOLA シミュレーター',
-        'clinchTrackerTitle': '🏁 TKO マジックナンバートラッカー (最終種目前)',
+        'clinchTrackerTitle': '🏁 TKO マジックナンバートラッカー',
         'raceTitle': 'チーム別の予測',
-        'clinchTrackerDesc': 'TKOは最終種目(BMX Dirt BT)に出場選手がいません。最終種目が始まる前に優勝を確定させるには、圧倒的なリードを築く必要があります。',
+        'clinchTrackerDesc': 'TKOが総合優勝を決めるために必要なリード（ライバルが残り未確定の全種目で最大ポイントを獲得した場合を想定）。',
         'safe': '確定！ (SAFE)',
         'needsMore': 'あと {pt} ポイント必要',
-        'finalEventMax': '最終種目最大: +{pt}pt (目標リード: {tgt}pt)',
+        'finalEventMax': '残り最大獲得可能: +{pt}pt (目標リード: {tgt}pt)',
         'liveLeaderboard': '🏆 シミュレーション総合ポイント',
         'actualResults': 'データ & スコア入力',
         'toolsSimulator': 'シミュレーター＆トラッカー',
@@ -4298,21 +4298,56 @@
 
         const combinedPlaces = getTeamPlacementsForSim(simPlacesByTeam);
         
-        const simLostPoints = { 'TKO': 0, 'NY': 0, 'LA': 0, 'SP': 0 };
-        const SIM_PLACE_POINTS = [100, 80, 60, 40, 30, 20];
+        const dynamicMaxPot = { 'TKO': baseTeams['TKO'] || 0, 'NY': baseTeams['NY'] || 0, 'LA': baseTeams['LA'] || 0, 'SP': baseTeams['SP'] || 0 };
+        const PLACE_PTS = [100, 80, 60, 40, 30, 20];
         
-        Object.keys(simGroups).forEach(tName => {
-           Object.keys(simGroups[tName]).forEach(ev => {
-               let theoretical = 0;
-               let actual = 0;
-               const simulatedPlacements = simGroups[tName][ev];
-               for (let i = 0; i < Math.min(simulatedPlacements.length, 6); i++) {
-                   theoretical += SIM_PLACE_POINTS[i];
-               }
-               simulatedPlacements.forEach(pts => actual += pts);
-               simLostPoints[tName] += (theoretical - actual);
+        if (window.state && window.state.sheetData && window.state.sheetData.nolaAthletes) {
+           window.state.sheetData.nolaAthletes.forEach(disc => {
+              const consumedRanks = [];
+              const teamSimulatedPts = { 'TKO': 0, 'NY': 0, 'LA': 0, 'SP': 0 };
+              const teamUnsimulatedCounts = { 'TKO': 0, 'NY': 0, 'LA': 0, 'SP': 0 };
+
+              disc.athletes.forEach(a => {
+                 let tName = String(a.team || '').trim().toUpperCase();
+                 if (tName === 'TOK' || tName === 'TK' || tName === 'TOKYO') tName = 'TKO';
+                 if (tName.startsWith('NY') || tName.includes('NEW')) tName = 'NY';
+                 if (tName.startsWith('LA')) tName = 'LA';
+                 if (tName.startsWith('SP') || tName.includes('SAO')) tName = 'SP';
+
+                 const key = `${disc.title}-${a.name}`.replace(/[^a-zA-Z0-9]/g, '');
+                 const sim = window.simState && window.simState[key];
+                 
+                 if (sim && sim.rank !== '-1' && sim.points >= 0 && (sim.points > 0 || sim.rank !== '0')) {
+                    if (sim.points > 0) {
+                       consumedRanks.push(sim.points);
+                       if (teamSimulatedPts[tName] !== undefined) {
+                          teamSimulatedPts[tName] += sim.points;
+                       }
+                    }
+                 } else {
+                    if (teamUnsimulatedCounts[tName] !== undefined && (!sim || sim.rank !== '-1')) {
+                       teamUnsimulatedCounts[tName]++;
+                    }
+                 }
+              });
+
+              const availablePts = [...PLACE_PTS];
+              consumedRanks.forEach(pts => {
+                 const idx = availablePts.indexOf(pts);
+                 if (idx !== -1) availablePts.splice(idx, 1);
+              });
+              availablePts.sort((a,b) => b - a);
+
+              ['TKO', 'NY', 'LA', 'SP'].forEach(t => {
+                 let pot = teamSimulatedPts[t];
+                 let count = teamUnsimulatedCounts[t];
+                 for (let i = 0; i < Math.min(count, availablePts.length); i++) {
+                    pot += availablePts[i];
+                 }
+                 dynamicMaxPot[t] += pot;
+              });
            });
-        });
+        }
 
         const leaderboard = Object.keys(baseTeams).map(tName => ({
           name: tName,
@@ -4320,7 +4355,7 @@
           sim: simAdditions[tName],
           total: baseTeams[tName] + simAdditions[tName],
           places: combinedPlaces[tName],
-          maxPot: (baseMaxPotentials[tName] || 0) - (simLostPoints[tName] || 0)
+          maxPot: dynamicMaxPot[tName]
         })).sort((a, b) => {
            if (b.total !== a.total) return b.total - a.total;
            for (let i = 1; i <= 12; i++) {
@@ -4330,7 +4365,6 @@
         });
 
         const tkoTotal = (baseTeams['TKO'] || 0) + simAdditions['TKO'];
-        const finalEventMax = { 'NY': 180, 'LA': 100, 'SP': 100 };
 
         let magicNumberHtml = `
           <div class="sim-clinch-card">
@@ -4342,7 +4376,9 @@
         ['NY', 'LA', 'SP'].forEach(rival => {
           const rivalTotal = (baseTeams[rival] || 0) + simAdditions[rival];
           const lead = tkoTotal - rivalTotal;
-          const maxRivalGain = finalEventMax[rival];
+          // Calculate max points rival can still gain from unsimulated events
+          const maxPot = dynamicMaxPot[rival] || 0;
+          const maxRivalGain = Math.max(0, maxPot - rivalTotal);
           const targetLead = maxRivalGain + 1;
           const pointsNeeded = targetLead - lead;
 
@@ -5085,7 +5121,7 @@
     };
 
     window.seState = {
-      targetSheet: 'SAC',
+      targetSheet: 'NOLA',
       originalValues: {},
       currentValues: {}
     };
@@ -5437,13 +5473,13 @@
           const h = header.toLowerCase().replace(/[\s=']/g, '');
           if (h.includes('skateboardmenskbst-') || (h.includes('menskbst') && !h.includes('stbt') && !h.includes('women')) || (h.includes('skbstreet') && h.includes('men') && !h.includes('women'))) return 'skbMen_0';
           if ((h.includes('menskbstbt') || h.includes('menskbbesttrick') || (h.includes('skbstreetbesttrick') && h.includes('men'))) && !h.includes('women')) return 'skbMen_1';
-          if ((h.includes('menskbpark') || (h.includes('skbpark') && h.includes('men'))) && !h.includes('women')) return 'skbMen_2';
+          if ((h.includes('menskbpark') || (h.includes('skbpark') && h.includes('men'))) && !h.includes('women') && !h.includes('besttrick') && !h.includes('bt')) return 'skbMen_2';
           if ((h.includes('menskbvertbt') || h.includes('menskbvertbesttrick') || (h.includes('skbvertbesttrick') && h.includes('men'))) && !h.includes('women')) return 'skbMen_4';
           if ((h.includes('menskbvert') || (h.includes('skbvert') && h.includes('men'))) && !h.includes('women') && !h.includes('besttrick') && !h.includes('bt')) return 'skbMen_3';
 
           if (h.includes('womenskbst-') || (h.includes('womenskbst') && !h.includes('stbt')) || (h.includes('skbstreet') && h.includes('women'))) return 'skbWomen_0';
           if (h.includes('womenskbstbt') || (h.includes('skbstreetbesttrick') && h.includes('women'))) return 'skbWomen_1';
-          if (h.includes('womenskbpark') || (h.includes('skbpark') && h.includes('women'))) return 'skbWomen_2';
+          if ((h.includes('womenskbpark') || (h.includes('skbpark') && h.includes('women'))) && !h.includes('besttrick') && !h.includes('bt')) return 'skbWomen_2';
           if (h.includes('womenskbvertbt') || (h.includes('skbvertbesttrick') && h.includes('women'))) return 'skbWomen_4';
           if ((h.includes('womenskbvert') || (h.includes('skbvert') && h.includes('women'))) && !h.includes('besttrick') && !h.includes('bt')) return 'skbWomen_3';
 
@@ -5599,8 +5635,8 @@
           predictedScoreStr += `- ${team}: ${pts}pt\n`;
         });
         predictedScoreStr += isJa 
-          ? '★最重要指示：レポートの冒頭（サマリー部分）で、現在の同点状況だけでなく、必ずこの「シミュレーター上の予測最終スコア（暫定）」の具体的なポイント数を提示し、「アベレージ予測通りだと何ポイント差で敗北してしまう見込みなのか」を明確に言語化した上で、それをどう覆すかの分析に進んでください。\n'
-          : '*CRITICAL: In the executive summary, you MUST explicitly state these "Simulator Projected Final Scores" and explain the projected point gap before moving into how to overcome it.\n';
+          ? '★最重要指示：レポートの冒頭（サマリー部分）で、現在のスコア状況と「シミュレーター上の予測最終スコア（暫定）」の具体的なポイント数を提示し、アベレージ予測通りに進むと最終的にどのような結果（何ポイント差での勝利/敗北）になるのかを明確に言語化した上で、今後の勝ち筋の分析に進んでください。\n'
+          : '*CRITICAL: In the executive summary, explicitly state the "Simulator Projected Final Scores" and clarify what the final outcome (winning/losing point gap) will be if the average prediction holds, before moving into the analysis of the winning path.\n';
       }
 
 
@@ -5621,13 +5657,13 @@
           : 'Analyze comprehensively from the perspective of all teams.';
       } else {
         teamPromptStr = isJa
-          ? `特に【${targetTeam}チームの専属アナリスト】として、${targetTeam}チームが優勝するためには具体的にどうすればよいか（誰が何位を取るべきか、どのライバルが崩れるべきか等）という視点を中心に、徹底的に分析してください。\nそして分析の結論として、必ず【今後の競技スケジュールと出場選手】のリストに記載されている「まだ出場予定の${targetTeam}チームの全選手（全員）」に対して、優勝するために最低限必要な「求められる戦績（目安となる順位やポイント）」をリストアップして提示してください。`
-          : `As the exclusive analyst for Team ${targetTeam}, thoroughly analyze exactly what ${targetTeam} needs to do to win (who needs what placement, which rivals need to falter, etc.).\nAs a conclusion, you MUST list out the minimum "required results (target placements or points)" for ALL remaining athletes of Team ${targetTeam} listed in the [Remaining Events Schedule].`;
+          ? `特に【${targetTeam}チームの専属アナリスト】として、${targetTeam}チームが優勝するためには具体的にどうすればよいか（誰が何位を取るべきか、どのライバルが崩れるべきか等）という視点を中心に、徹底的に分析してください。\nそして分析の結論として、【今後の競技スケジュールと出場選手】のリストに記載されている${targetTeam}チームの選手のうち、優勝のキーマンとなる主要な出場予定選手に対して、優勝に最低限必要な「求められる戦績（目安となる順位やポイント）」をリストアップして提示してください。`
+          : `As the exclusive analyst for Team ${targetTeam}, thoroughly analyze exactly what ${targetTeam} needs to do to win (who needs what placement, which rivals need to falter, etc.).\nAs a conclusion, you MUST list out the minimum "required results (target placements or points)" for the KEY remaining athletes of Team ${targetTeam} listed in the [Remaining Events Schedule].`;
       }
 
       let remainingEventsStr = isJa
-        ? '\n【今後の競技スケジュールと出場選手（各競技につき各チーム1名まで、指定選手のみ出場）】\n'
-        : '\n[Remaining Events Schedule and Participating Athletes (Max 1 per team per event)]\n';
+        ? '\n【今後の競技スケジュールと出場選手（指定選手のみ出場）】\n'
+        : '\n[Remaining Events Schedule and Participating Athletes]\n';
       
       if (state.sheetData && state.sheetData.nolaAthletes) {
         state.sheetData.nolaAthletes.forEach(disc => {
