@@ -2517,13 +2517,13 @@
     
     // Global helper to calculate true dynamic remaining potential for NOLA
     window.getNolaDynamicMaxPot = function(teamName) {
-        if (!window.state || !window.state.sheetData || !window.state.sheetData.nolaAthletes) return null;
+        if (!window.state || !window.state.sheetData || !window.state.sheetData['NOLAAthlete'] || !window.state.sheetData['NOLAAthlete'].nolaAthletes) return null;
         
         const canonical = getCanonicalClub(teamName);
         let remainingPot = 0;
         const PLACE_PTS = [100, 80, 60, 40, 30, 20];
         
-        window.state.sheetData.nolaAthletes.forEach(disc => {
+        window.state.sheetData['NOLAAthlete'].nolaAthletes.forEach(disc => {
             const consumedRanks = [];
             let teamUnsimCount = 0;
             
@@ -4431,12 +4431,17 @@
         const dynamicMaxPot = { 'TKO': baseTeams['TKO'] || 0, 'NY': baseTeams['NY'] || 0, 'LA': baseTeams['LA'] || 0, 'SP': baseTeams['SP'] || 0 };
         const PLACE_PTS = [100, 80, 60, 40, 30, 20];
         
-        if (window.state && window.state.sheetData && window.state.sheetData.nolaAthletes) {
+        if (window.state && window.state.sheetData && window.state.sheetData['NOLAAthlete'] && window.state.sheetData['NOLAAthlete'].nolaAthletes) {
            ['TKO', 'NY', 'LA', 'SP'].forEach(t => {
                // Use the shared global helper for unsimulated max potential
                const pot = typeof window.getNolaDynamicMaxPot === 'function' ? window.getNolaDynamicMaxPot(t) : 0;
                // Add the simulated points that are already tracked in simAdditions
                dynamicMaxPot[t] += pot + simAdditions[t];
+           });
+        } else {
+           // Fallback if missing
+           ['TKO', 'NY', 'LA', 'SP'].forEach(t => {
+               dynamicMaxPot[t] += (mcResults[t]?.highestScore || 0);
            });
         }
 
@@ -5691,8 +5696,8 @@
         ? '\n【今後の競技スケジュールと出場選手（指定選手のみ出場）】\n'
         : '\n[Remaining Events Schedule and Participating Athletes]\n';
       
-      if (state.sheetData && state.sheetData.nolaAthletes) {
-        state.sheetData.nolaAthletes.forEach(disc => {
+      if (state.sheetData && state.sheetData['NOLAAthlete'] && state.sheetData['NOLAAthlete'].nolaAthletes) {
+        state.sheetData['NOLAAthlete'].nolaAthletes.forEach(disc => {
           const competingAthletes = [];
           disc.athletes.forEach(a => {
             const key = `${disc.title}-${a.name}`.replace(/[^a-zA-Z0-9]/g, '');
