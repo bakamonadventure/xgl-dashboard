@@ -4301,7 +4301,13 @@
           if (tName === 'TOK' || tName === 'TK' || tName === 'TOKYO') tName = 'TKO';
           
           if (simAdditions[tName] !== undefined) {
-            simAdditions[tName] += sim.points > 0 ? sim.points : 0;
+            if (sim._actual) {
+              if (baseTeams[tName] !== undefined) {
+                baseTeams[tName] += sim.points > 0 ? sim.points : 0;
+              }
+            } else {
+              simAdditions[tName] += sim.points > 0 ? sim.points : 0;
+            }
             const rankStr = sim.rank || String(sim.place || '');
             if (sim.points > 0) { // Valid top 6 placement
                // rankStr is like '100', '80', '60'... Convert to place (1-6)
@@ -4348,7 +4354,7 @@
                  if (sim && sim.rank !== '-1' && sim.points >= 0 && (sim.points > 0 || sim.rank !== '0')) {
                     if (sim.points > 0) {
                        consumedRanks.push(sim.points);
-                       if (teamSimulatedPts[tName] !== undefined) {
+                       if (!sim._actual && teamSimulatedPts[tName] !== undefined) {
                           teamSimulatedPts[tName] += sim.points;
                        }
                     }
