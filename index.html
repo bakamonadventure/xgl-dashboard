@@ -2234,54 +2234,35 @@
         currentSection = headerRow[1];
       }
 
-      while (idx < summaryRow.length) {
-        if (!summaryRow[idx] || !isClubNameToken(summaryRow[idx])) {
-          idx += 1;
-          continue;
-        }
-
-        const name = summaryRow[idx];
-        idx += 1;
+      const clubNamesOrder = ['TKO', 'NY', 'LA', 'SP'];
+      for (let i = 0; i < 4; i++) {
+        const baseCol = 2 + (i * 6);
+        if (baseCol >= summaryRow.length) break;
+        
+        const name = clubNamesOrder[i];
         let score = null;
-        if (isNumber(summaryRow[idx])) {
-          score = Number(summaryRow[idx]);
-          idx += 1;
+        if (isNumber(summaryRow[baseCol + 1])) {
+          score = Number(summaryRow[baseCol + 1]);
         }
-
-        const metrics = {};
-        while (idx < summaryRow.length && !isClubNameToken(summaryRow[idx])) {
-          const token = summaryRow[idx];
-          if (token === 'Attendances') {
-            idx += 1;
-            if (isNumber(summaryRow[idx])) {
-              metrics.Attendance = Number(summaryRow[idx]);
-            }
-            idx += 1;
-            continue;
-          }
-
-          if (token === 'MAX' && summaryRow[idx + 1] === 'POINTS') {
-            idx += 2;
-            if (isNumber(summaryRow[idx])) {
-              metrics['MAX POINTS'] = Number(summaryRow[idx]);
-            }
-            idx += 1;
-            continue;
-          }
-
-          if (token === 'MAX POINTS') {
-            idx += 1;
-            if (isNumber(summaryRow[idx])) {
-              metrics['MAX POINTS'] = Number(summaryRow[idx]);
-            }
-            idx += 1;
-            continue;
-          }
-
-          idx += 1;
+        
+        let attendance = null;
+        if (isNumber(summaryRow[baseCol + 3])) {
+          attendance = Number(summaryRow[baseCol + 3]);
         }
-
-        teamSummaries.push({ name, score, metrics });
+        
+        let maxPoints = null;
+        if (isNumber(summaryRow[baseCol + 5])) {
+          maxPoints = Number(summaryRow[baseCol + 5]);
+        }
+        
+        teamSummaries.push({
+          name,
+          score,
+          metrics: {
+            'Attendance': attendance,
+            'MAX POINTS': maxPoints
+          }
+        });
       }
 
       const totalTeamColumns = Math.max(0, headerRow.length - 2);
@@ -2349,83 +2330,43 @@
 
     function parseClubSummaryRow(rawRows) {
       if (!rawRows?.length) return [];
-      let summaryRow = rawRows.find(row => row.some(cell => normalizeCell(cell) === 'Attendances'));
-      if (!summaryRow) {
-        summaryRow = rawRows.find(row => row.some((cell, index) => {
-          const normalized = normalizeCell(cell);
-          return isClubNameToken(normalized) && isNumber(normalizeCell(row[index + 1]));
-        }));
-      }
+      const summaryRow = rawRows.find(row => row.some(cell => normalizeCell(cell) === 'Attendances' || normalizeCell(cell) === 'MAX POINTS')) || rawRows[0];
       if (!summaryRow) return [];
 
-      const tokens = summaryRow
-        .map(cell => normalizeCell(cell))
-        .filter(cell => cell !== '');
-
-      let i = 0;
-      while (i < tokens.length) {
-        if (!isClubNameToken(tokens[i])) {
-          i += 1;
-          continue;
-        }
-        const next = tokens[i + 1];
-        if (isClubNameToken(next)) {
-          i += 1;
-          continue;
-        }
-        break;
-      }
-
       const clubs = [];
-      while (i < tokens.length) {
-        if (!isClubNameToken(tokens[i])) {
-          i += 1;
-          continue;
-        }
+      const clubNamesOrder = ['TKO', 'NY', 'LA', 'SP'];
+      for (let i = 0; i < 4; i++) {
+        const baseCol = 2 + (i * 6);
+        if (baseCol >= summaryRow.length) break;
 
-        const name = tokens[i];
-        i += 1;
+        const name = clubNamesOrder[i];
         let score = null;
-        if (isNumber(tokens[i])) {
-          score = Number(tokens[i]);
-          i += 1;
+        let cellScore = summaryRow[baseCol + 1];
+        if (cellScore !== undefined && isNumber(normalizeCell(cellScore))) {
+          score = Number(normalizeCell(cellScore));
         }
 
-        const metrics = {};
-        while (i < tokens.length && !isClubNameToken(tokens[i])) {
-          const token = tokens[i];
-          const next = tokens[i + 1];
-          if (token === 'Attendances') {
-            i += 1;
-            if (isNumber(tokens[i])) {
-              metrics.Attendance = Number(tokens[i]);
-            }
-            i += 1;
-            continue;
-          }
-
-          if (token === 'MAX' && tokens[i + 1] === 'POINTS') {
-            i += 2;
-            if (isNumber(tokens[i])) {
-              metrics['MAX POINTS'] = Number(tokens[i]);
-            }
-            i += 1;
-            continue;
-          }
-
-          if (token === 'MAX POINTS') {
-            i += 1;
-            if (isNumber(tokens[i])) {
-              metrics['MAX POINTS'] = Number(tokens[i]);
-            }
-            i += 1;
-            continue;
-          }
-
-          i += 1;
+        let attendance = null;
+        let cellAtt = summaryRow[baseCol + 3];
+        if (cellAtt !== undefined && isNumber(normalizeCell(cellAtt))) {
+          attendance = Number(normalizeCell(cellAtt));
         }
 
-        clubs.push({ name, score, metrics, palette: getTeamPalette(name) });
+        let maxPoints = null;
+        let cellMax = summaryRow[baseCol + 5];
+        if (cellMax !== undefined && isNumber(normalizeCell(cellMax))) {
+          maxPoints = Number(normalizeCell(cellMax));
+        }
+
+        clubs.push({
+          name,
+          score,
+          metrics: {
+            'Attendance': attendance,
+            'MAX POINTS': maxPoints
+          },
+          palette: getTeamPalette(name)
+        });
       }
 
       return clubs;
