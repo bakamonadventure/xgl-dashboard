@@ -2220,7 +2220,7 @@
       return { headers, rows };
     }
 
-    function buildEventMatrix(rawRows) {
+    function buildEventMatrix(rawRows, sheetKey) {
       if (!rawRows?.length) return null;
       const headerIndex = findEventHeaderIndex(rawRows);
       if (headerIndex <= 0 || headerIndex + 1 >= rawRows.length) return null;
@@ -2347,7 +2347,29 @@
       return { teams: teamDefs, eventRows };
     }
 
-    function parseClubSummaryRow(rawRows) {
+    function parseClubSummaryRow(rawRows, sheetKey) {
+      if (sheetKey === 'TOTAL') {
+        const summaryRow = rawRows.find(row => row.some(cell => normalizeCell(cell) === 'Attendances' || normalizeCell(cell) === 'MAX POINTS')) || rawRows[0];
+        if (!summaryRow) return [];
+        const clubs = [];
+        const clubNamesOrder = ['TKO', 'NY', 'LA', 'SP'];
+        for (let i = 0; i < 4; i++) {
+          const baseCol = 2 + (i * 6);
+          if (baseCol >= summaryRow.length) break;
+          const name = clubNamesOrder[i];
+          let score = null;
+          let cellScore = summaryRow[baseCol + 1];
+          if (cellScore !== undefined && isNumber(normalizeCell(cellScore))) score = Number(normalizeCell(cellScore));
+          let attendance = null;
+          let cellAtt = summaryRow[baseCol + 3];
+          if (cellAtt !== undefined && isNumber(normalizeCell(cellAtt))) attendance = Number(normalizeCell(cellAtt));
+          let maxPoints = null;
+          let cellMax = summaryRow[baseCol + 5];
+          if (cellMax !== undefined && isNumber(normalizeCell(cellMax))) maxPoints = Number(normalizeCell(cellMax));
+          clubs.push({ name, score, metrics: { 'Attendance': attendance, 'MAX POINTS': maxPoints }, palette: getTeamPalette(name) });
+        }
+        return clubs;
+      }
       if (!rawRows?.length) return [];
       let summaryRow = rawRows.find(row => row.some(cell => normalizeCell(cell) === 'Attendances'));
       if (!summaryRow) {
@@ -4986,8 +5008,8 @@
           headers: tableData.headers,
           rows: tableData.rows,
           rawRows: parsedRaw.data || [],
-          eventMatrix: buildEventMatrix(parsedRaw.data || []),
-          clubs: sheet.key === 'Athlete' ? parseAthleteClubs(parsedRaw.data || []) : parseClubSummaryRow(parsedRaw.data || []),
+          eventMatrix: buildEventMatrix(parsedRaw.data || [], sheet.key),
+          clubs: sheet.key === 'Athlete' ? parseAthleteClubs(parsedRaw.data || []) : parseClubSummaryRow(parsedRaw.data || [], sheet.key),
           nolaAthletes: sheet.key === 'NOLAAthlete' ? parseNolaFocusData(parsedRaw.data || []) : null,
           updatedAt: new Date().toLocaleTimeString('ja-JP'),
           duration,
