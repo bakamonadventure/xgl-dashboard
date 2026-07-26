@@ -2534,12 +2534,12 @@
                 const key = `${disc.title}-${a.name}`.replace(/[^a-zA-Z0-9]/g, '');
                 const sim = window.simState && window.simState[key];
                 
-                if (sim && sim.rank !== '-1' && sim.points >= 0 && (sim.points > 0 || sim.rank !== '0')) {
+                if (sim && String(sim.rank) !== '-1') {
                     if (sim.points > 0) {
                         consumedRanks.push(sim.points);
                     }
                 } else {
-                    if (tName === canonical && (!sim || sim.rank !== '-1')) {
+                    if (tName === canonical) {
                         teamUnsimCount++;
                     }
                 }
