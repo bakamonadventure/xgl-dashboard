@@ -3879,11 +3879,54 @@
             }
           });
 
+          // Extract finalized ranks from ScoreEntry to bypass CSV cache delay
+          const sePlacements = [];
+          if (window.seState && window.seState.originalValues && Object.keys(window.seState.originalValues).length > 0) {
+             const seToSport = { 'skbMen': ['Skateboard', 'Men'], 'skbWomen': ['Skateboard', 'Women'], 'bmxMen': ['BMX', 'Men'], 'bmxWomen': ['BMX', 'Women'] };
+             const evNames = {
+               'skbMen': ['Street', 'Street BT', 'Park', 'Vert', 'Vert BT'],
+               'skbWomen': ['Street', 'Street BT', 'Park', 'Vert', 'Vert BT'],
+               'bmxMen': ['Park', 'Park BT', 'Street', 'Dirt', 'Dirt BT'],
+               'bmxWomen': ['Park', 'Park BT', 'Street', 'Dirt', 'Dirt BT']
+             };
+             Object.keys(window.seState.originalValues).forEach(k => {
+               const val = window.seState.originalValues[k];
+               if (!val || val.trim() === '') return;
+               const parts = k.split('_'); // skbMen_0_0
+               if (parts.length === 3) {
+                 const sec = parts[0];
+                 const evIdx = parseInt(parts[1], 10);
+                 const place = parseInt(parts[2], 10);
+                 if (seToSport[sec] && evNames[sec] && evNames[sec][evIdx]) {
+                   const evName = evNames[sec][evIdx];
+                   const placeVal = place + 1;
+                   
+                   let points = 0;
+                   if (placeVal === 1) points = 100;
+                   else if (placeVal === 2) points = 80;
+                   else if (placeVal === 3) points = 60;
+                   else if (placeVal === 4) points = 40;
+                   else if (placeVal === 5) points = 30;
+                   else if (placeVal === 6) points = 20;
+
+                   sePlacements.push({
+                     athleteName: val,
+                     sport: seToSport[sec][0],
+                     gender: seToSport[sec][1],
+                     eventName: evName,
+                     place: placeVal,
+                     points: points
+                   });
+                 }
+               }
+             });
+          }
+
           // Lock actual NOLA placements from the spreadsheet if present
           disc.athletes.forEach(a => {
             const key = `${disc.title}-${a.name}`.replace(/[^a-zA-Z0-9]/g, '');
             if (!window.simState[key]) {
-              const actual = actualNolaPlacements.find(p => {
+              const findPlacement = (placements) => placements.find(p => {
                 const pName = p.athleteName.trim().toLowerCase().replace(/[\(\)]/g, '');
                 const aName = a.name.trim().toLowerCase().replace(/[\(\)]/g, '');
                 let nameMatch = (pName === aName);
@@ -3919,6 +3962,9 @@
                 
                 return false;
               });
+
+              let actual = findPlacement(sePlacements);
+              if (!actual) actual = findPlacement(actualNolaPlacements);
               if (actual) {
                 let rankStr = '0';
                 if (actual.points === 100) rankStr = '100';
