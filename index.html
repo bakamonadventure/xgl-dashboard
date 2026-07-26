@@ -3886,9 +3886,37 @@
               const actual = actualNolaPlacements.find(p => {
                 const pName = p.athleteName.trim().toLowerCase().replace(/[\(\)]/g, '');
                 const aName = a.name.trim().toLowerCase().replace(/[\(\)]/g, '');
-                if (pName === aName) return true;
-                const parts = aName.split(/\s+/).filter(part => part.length > 2);
-                if (parts.length >= 2 && parts.every(part => pName.includes(part))) return true;
+                let nameMatch = (pName === aName);
+                if (!nameMatch) {
+                  const parts = aName.split(/\s+/).filter(part => part.length > 2);
+                  if (parts.length >= 2 && parts.every(part => pName.includes(part))) nameMatch = true;
+                }
+                if (!nameMatch) return false;
+                
+                const pEventMatch = p.eventName.replace(/[\s=']/g, '').toLowerCase();
+                const discMatch = disc.title.replace(/[\s=']/g, '').toLowerCase();
+                
+                const isSkb = discMatch.includes('skb') || discMatch.includes('skateboard');
+                const isBmx = discMatch.includes('bmx');
+                const isMen = discMatch.includes('men');
+                const isWomen = discMatch.includes('women');
+                
+                const pIsSkb = p.sport.toLowerCase() === 'skateboard';
+                const pIsBmx = p.sport.toLowerCase() === 'bmx';
+                const pIsMen = p.gender.toLowerCase() === 'men';
+                const pIsWomen = p.gender.toLowerCase() === 'women';
+                
+                if (isSkb !== pIsSkb || isBmx !== pIsBmx || isMen !== pIsMen || isWomen !== pIsWomen) return false;
+                
+                const isBt = discMatch.includes('bt') || discMatch.includes('besttrick');
+                const pIsBt = pEventMatch.includes('bt') || pEventMatch.includes('besttrick');
+                if (isBt !== pIsBt) return false;
+
+                const bases = ['street', 'park', 'vert', 'dirt'];
+                for (const b of bases) {
+                  if (discMatch.includes(b) && pEventMatch.includes(b)) return true;
+                }
+                
                 return false;
               });
               if (actual) {
